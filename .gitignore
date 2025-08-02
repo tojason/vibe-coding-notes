@@ -1,0 +1,15 @@
+# Tool-specific directories
+.claude/
+.serena/
+agent-outputs/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+CLUADE.md
+
+# Editor/IDE specific files
+.vscode/
+
+# Log files
+*.log
