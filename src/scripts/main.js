@@ -170,6 +170,14 @@ class NotesApp {
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
 
+    // Global click handler to close note actions when clicking outside
+    document.addEventListener('click', (e) => {
+      // Don't close if clicking on action buttons or menus
+      if (!e.target.closest('.note-actions') && !e.target.closest('.note-actions-btn')) {
+        this.closeAllNoteActions();
+      }
+    });
+
     // Window events
     window.addEventListener('beforeunload', () => this.saveDraftOnUnload());
     
@@ -224,7 +232,7 @@ class NotesApp {
   addNote(noteData) {
     const note = {
       id: this.generateId(),
-      title: noteData.title || this.generateTitle(noteData.content),
+      title: noteData.title.trim(),
       content: noteData.content,
       tags: this.parseTags(noteData.tags),
       createdAt: new Date().toISOString(),
@@ -247,7 +255,7 @@ class NotesApp {
 
     const updatedNote = {
       ...this.notes[noteIndex],
-      title: noteData.title || this.generateTitle(noteData.content),
+      title: noteData.title.trim(),
       content: noteData.content,
       tags: this.parseTags(noteData.tags),
       updatedAt: new Date().toISOString()
@@ -395,6 +403,18 @@ class NotesApp {
   }
 
   // ==========================================================================
+  // Note Actions Management
+  // ==========================================================================
+
+  closeAllNoteActions() {
+    // Find all visible note action menus and hide them
+    const openActions = document.querySelectorAll('.note-actions[style*="flex"]');
+    openActions.forEach(actions => {
+      actions.style.display = 'none';
+    });
+  }
+
+  // ==========================================================================
   // UI Rendering
   // ==========================================================================
 
@@ -446,13 +466,20 @@ class NotesApp {
       card.classList.add('highlighted');
     }
 
+    // Add class for content-only notes
+    if (!note.title.trim()) {
+      card.classList.add('content-only');
+    }
+
     card.innerHTML = `
-      <header class="note-header">
-        <div class="note-tags">
-          ${note.tags.map(tag => `
-            <span class="note-tag ${this.getTagClass(tag)}">${this.escapeHtml(tag)}</span>
-          `).join('')}
-        </div>
+      <header class="note-header ${note.tags.length === 0 ? 'no-tags' : ''}">
+        ${note.tags.length > 0 ? `
+          <div class="note-tags">
+            ${note.tags.map(tag => `
+              <span class="note-tag ${this.getTagClass(tag)}">${this.escapeHtml(tag)}</span>
+            `).join('')}
+          </div>
+        ` : ''}
         <div class="note-meta">
           <time class="note-timestamp" datetime="${note.createdAt}" title="${this.formatFullDate(note.createdAt)}">
             ${this.formatRelativeTime(note.createdAt)}
@@ -462,7 +489,10 @@ class NotesApp {
       </header>
       
       <div class="note-content">
-        <h3 class="note-title">${this.highlightSearchTerm(this.escapeHtml(note.title))}</h3>
+        <time class="note-date" datetime="${note.createdAt}" title="${this.formatFullDate(note.createdAt)}">
+          ${this.formatFriendlyDate(note.createdAt)}
+        </time>
+        ${note.title.trim() ? `<h3 class="note-title">${this.highlightSearchTerm(this.escapeHtml(note.title))}</h3>` : ''}
         <p class="note-body">${this.highlightSearchTerm(this.escapeHtml(this.truncateContent(note.content, 150)))}</p>
       </div>
       
@@ -499,6 +529,11 @@ class NotesApp {
     // Actions toggle
     actionsBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
+      
+      // Close all other open action menus first
+      this.closeAllNoteActions();
+      
+      // Toggle this action menu
       const isVisible = actions.style.display !== 'none';
       actions.style.display = isVisible ? 'none' : 'flex';
     });
@@ -535,15 +570,15 @@ class NotesApp {
     this.elements.modalTitle.textContent = 'Add New Note';
     this.elements.saveBtn.innerHTML = '<span class="btn-text">Save Note</span><span class="btn-loading" style="display: none;">Saving...</span>';
     
+    // Clear any existing draft to ensure clean slate
+    this.clearDraft();
+    
     // Clear form
     this.elements.noteTitle.value = '';
     this.elements.noteContent.value = '';
     this.elements.noteTags.value = '';
     this.clearFormErrors();
     this.updateCharacterCount();
-    
-    // Load draft if exists
-    this.loadDraft();
     
     this.showModal();
     this.elements.noteContent.focus();
@@ -993,7 +1028,7 @@ class NotesApp {
       return;
     }
 
-    // Escape: Close modal or clear search
+    // Escape: Close modal, clear search, or close note actions
     if (e.key === 'Escape') {
       if (this.elements.modalOverlay.style.display === 'flex') {
         this.closeModal();
@@ -1001,6 +1036,9 @@ class NotesApp {
         this.closeConfirmModal();
       } else if (this.currentSearch) {
         this.clearSearch();
+      } else {
+        // Close any open note action menus
+        this.closeAllNoteActions();
       }
       return;
     }
@@ -1163,6 +1201,31 @@ class NotesApp {
 
   formatFullDate(dateString) {
     return new Date(dateString).toLocaleString();
+  }
+
+  formatFriendlyDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const noteDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    const diffTime = today.getTime() - noteDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      // Show day of week for this week
+      return date.toLocaleDateString('en-US', { weekday: 'long' });
+    } else if (date.getFullYear() === now.getFullYear()) {
+      // Same year: show "Jan 15"
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else {
+      // Different year: show "Jan 15, 2024"
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
   }
 
   truncateContent(content, maxLength) {

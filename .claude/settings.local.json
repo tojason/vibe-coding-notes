@@ -2,9 +2,20 @@
   "permissions": {
     "allow": [
       "Bash(mkdir:*)",
+      "Bash(git commit:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
       "mcp__serena__list_dir",
       "mcp__serena__check_onboarding_performed",
-      "mcp__serena__read_memory"
+      "mcp__serena__read_memory",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__replace_regex",
+      "mcp__*"
     ],
     "deny": []
   }

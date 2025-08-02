@@ -506,6 +506,10 @@ pre {
   margin-top: var(--space-3);
   font-size: var(--text-sm);
   color: var(--primary-600);
+  max-width: var(--container-lg);
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 var(--space-4);
 }
 
 /* Main Content */
@@ -651,6 +655,13 @@ pre {
   min-height: 32px;
 }
 
+/* Note header without tags - adjust layout and spacing */
+.note-header.no-tags {
+  align-items: center;
+  min-height: auto;
+  margin-bottom: var(--space-2);
+}
+
 .note-tags {
   display: flex;
   flex-wrap: wrap;
@@ -755,6 +766,29 @@ pre {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+/* Content-only notes styling (when title is empty) */
+.note-card.content-only .note-content {
+  padding-top: var(--space-1);
+}
+
+.note-card.content-only .note-body {
+  font-size: var(--text-lg);
+  color: var(--primary-900);
+  font-weight: var(--font-medium);
+  -webkit-line-clamp: 4;
+}
+
+/* Note Date Display */
+.note-date {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--accent-600);
+  margin-bottom: var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 /* Note Actions */
@@ -1422,6 +1456,10 @@ pre {
 
   .note-body {
     font-size: var(--text-lg);
+  }
+
+  .note-date {
+    font-size: var(--text-base);
   }
 
   /* Modals */
