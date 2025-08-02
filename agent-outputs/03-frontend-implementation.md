@@ -120,11 +120,13 @@ src/
 - Form validation and error handling
 - Loading states for better UX
 
-**Floating Action Button:**
-- Fixed positioning with safe area support
-- Animated state transitions
-- Mobile-optimized touch targets
-- Keyboard accessible
+**Card-Style Add Note Button:**
+- Replaces the Floating Action Button (FAB) for improved contextual relevance and scalability.
+- Implemented as the first grid item in the notes list.
+- Responsive behavior across device sizes.
+- Dark mode support.
+- Keyboard and screen-reader accessible.
+- Context-aware microcopy.
 
 **Search Interface:**
 - Auto-focus and keyboard shortcuts

@@ -89,6 +89,19 @@ Total: 5-7 seconds including typing
 Total: 9 seconds including dictation
 ```
 
+### 2.1 Evolution of Note-Adding Interface: From FAB to Card
+
+Further UX research refined the note-adding interface, moving from a Floating Action Button (FAB) to an integrated card-style Add Note button. This change balances high discoverability with contextual relevance, addressing different user mental models.
+
+**Key UX Insights for Card-Style Button:**
+- **Discoverability vs Context**: While FABs offer high visibility, they can overlay content and have limited scalability. An integrated card, as the first grid item, integrates seamlessly with the content grid, scales well, and provides clear context cues.
+- **User Mental Models**:
+    - **Capture Mode (power users)**: Still prioritizes speed, retaining keyboard shortcuts for rapid entry.
+    - **Organization Mode (casual users)**: Benefits from a contextual entry point that aligns with the visual flow of notes.
+- **Placement**: The card is strategically placed as the first item in the notes grid, making it immediately visible and accessible within the content flow.
+
+This hybrid approach aims to serve both quick capture and contextual entry needs, enhancing the overall user experience for note creation.
+
 ### Information Architecture
 
 **Primary Organization: Chronological with Smart Overlays**

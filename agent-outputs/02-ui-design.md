@@ -232,33 +232,68 @@ This UI design specification creates a beautiful, professional interface for the
 
 ### 3. Add Note Interface
 
-**Design Pattern:** Floating Action Button + Expandable Form
+**Design Pattern:** Card-Style Add Note Button + Expandable Form
 
-**Mobile Design (Primary):**
-```
-┌─────────────────────────────────────┐
-│                               [+] ← │ FAB (56x56px)
-│                                     │
-│ ┌─────────────────────────────────┐ │
-│ │ Quick note input field...       │ │ ← Expandable input
-│ │                                 │ │
-│ │ [Tags: auto-suggest]            │ │
-│ │                                 │ │
-│ │           [Save] [Cancel]       │ │
-│ └─────────────────────────────────┘ │
-└─────────────────────────────────────┘
+**Visual Style (Card):**
+```css
+.add-note-card {
+  background: var(--add-button-bg);
+  border: 2px dashed var(--add-button-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+  order: -1; /* Ensures it's the first item in a grid layout */
+}
+.add-note-card:hover {
+  border-style: solid;
+  border-color: var(--add-button-border-hover);
+  background: var(--add-button-bg-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.add-note-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--add-button-icon);
+  transition: all 0.2s var(--ease-out);
+}
+.add-note-text {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--add-button-text);
+  margin: 0;
+  text-align: center;
+}
+.add-note-description {
+  font-size: var(--text-sm);
+  color: var(--add-button-description);
+  opacity: 0.8;
+  margin: 0;
+  text-align: center;
+}
 ```
 
-**FAB Specifications:**
-- **Size:** 56x56px mobile, 48x48px desktop
-- **Position:** Fixed, bottom: 24px, right: 24px
-- **Background:** `--accent-600` with subtle gradient
-- **Icon:** Plus icon, 24x24px, white color
-- **Shadow:** `--shadow-lg`
-- **Animation:** Rotate 45° when active, scale on press
+**Card Specifications:**
+- **Background:** `var(--add-button-bg)` (gradient for visual distinction)
+- **Border:** `2px dashed var(--add-button-border)` (subtle, changes to solid on hover)
+- **Border Radius:** `--radius-lg` (12px)
+- **Padding:** `var(--space-6)` (24px)
+- **Min Height:** 140px (ensures visual consistency with note cards)
+- **Display:** Flexbox for centering icon and text
+- **Order:** `-1` (to appear as the first item in a grid layout)
+- **Icon:** Plus icon, 32x32px, `var(--add-button-icon)` color
+- **Text:** "Add New Note" (`--add-button-text`), "Capture your insights and ideas" (`--add-button-description`)
+- **Interaction:** `transform: translateY(-2px)` and `box-shadow: var(--shadow-md)` on hover.
 
 **Expandable Form:**
-- **Animation:** Slide up from bottom (mobile), fade in from FAB (desktop)
+- **Animation:** Slide up from bottom (mobile), fade in from card (desktop)
 - **Background:** White with subtle backdrop blur
 - **Border Radius:** 16px top corners only (mobile), 12px all (desktop)
 - **Padding:** 24px all sides

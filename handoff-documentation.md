@@ -36,14 +36,14 @@ Building a personal vibe-coding notes website as a single-page application for G
 
 **Key Design Decisions**:
 - **Color System**: Developer-focused blues and grays with accessible contrast ratios
-- **Component Architecture**: Card-based layout with floating action button for mobile
+- **Component Architecture**: Card-based layout with an integrated card-style add note button
 - **Responsive Strategy**: Mobile-first with 4 breakpoints (mobile/tablet/desktop/large)
 - **Interaction Design**: Subtle micro-animations with GPU acceleration for 60fps performance
 - **Typography**: Inter + JetBrains Mono with clamp() for fluid responsive scaling
 
 **Visual Design Highlights**:
 - Note cards with hover states and semantic tag colors
-- Expandable FAB with slide-up modal for mobile note creation
+- Expandable form with slide-up modal for mobile note creation (triggered by card-style button)
 - Search interface with real-time filtering and horizontal scroll tags
 - Dark mode with proper color system overrides
 - Loading skeletons and engaging empty states
