@@ -11,6 +11,319 @@
 // Application State Management
 // ==========================================================================
 
+// Smart Dropdown Positioning Controller
+class PriorityDropdownController {
+  constructor() {
+    this.activeDropdown = null;
+    this.overlay = null;
+    this.resizeHandler = () => this.repositionActiveDropdown();
+    
+    // Create overlay element for center positioning
+    this.createOverlay();
+  }
+  
+  createOverlay() {
+    this.overlay = document.createElement('div');
+    this.overlay.className = 'priority-dropdown-overlay';
+    this.overlay.addEventListener('click', () => this.closeActiveDropdown());
+    document.body.appendChild(this.overlay);
+  }
+  
+  openDropdown(triggerElement, dropdownElement) {
+    try {
+      // Validate inputs
+      if (!triggerElement || !dropdownElement) {
+        console.warn('PriorityDropdownController: Invalid trigger or dropdown element');
+        return;
+      }
+      
+      // Close any existing dropdown
+      this.closeActiveDropdown();
+      
+      // Calculate optimal position
+      const position = this.calculatePosition(triggerElement, dropdownElement);
+      
+      // Apply positioning
+      this.applyPositioning(dropdownElement, position);
+      
+      // Show dropdown
+      this.showDropdown(dropdownElement, position.needsOverlay);
+      
+      // Track active dropdown
+      this.activeDropdown = { trigger: triggerElement, dropdown: dropdownElement };
+      
+      // Listen for window resize and scroll
+      window.addEventListener('resize', this.resizeHandler);
+      window.addEventListener('scroll', this.resizeHandler, { passive: true });
+      
+    } catch (error) {
+      console.error('PriorityDropdownController: Error opening dropdown:', error);
+      this.closeActiveDropdown();
+    }
+  }
+  
+  closeActiveDropdown() {
+    try {
+      if (this.activeDropdown) {
+        this.hideDropdown(this.activeDropdown.dropdown);
+        this.activeDropdown = null;
+      }
+      
+      // Remove event listeners
+      window.removeEventListener('resize', this.resizeHandler);
+      window.removeEventListener('scroll', this.resizeHandler);
+      
+    } catch (error) {
+      console.error('PriorityDropdownController: Error closing dropdown:', error);
+      // Force cleanup
+      this.activeDropdown = null;
+      this.overlay.classList.remove('show');
+    }
+  }
+  
+  calculatePosition(trigger, dropdown) {
+    // Temporarily show dropdown to measure dimensions
+    dropdown.style.visibility = 'hidden';
+    dropdown.style.display = 'block';
+    dropdown.style.opacity = '0';
+    dropdown.style.position = 'absolute';
+    dropdown.style.top = '0';
+    dropdown.style.left = '0';
+    dropdown.style.transform = 'none';
+    
+    const triggerRect = trigger.getBoundingClientRect();
+    const dropdownRect = dropdown.getBoundingClientRect();
+    
+    // Hide dropdown again
+    dropdown.style.display = 'none';
+    dropdown.style.visibility = 'visible';
+    dropdown.style.opacity = '';
+    dropdown.style.position = '';
+    dropdown.style.top = '';
+    dropdown.style.left = '';
+    dropdown.style.transform = '';
+    
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+    
+    const spacing = 8;
+    const dropdownWidth = dropdownRect.width || 160; // fallback width
+    const dropdownHeight = dropdownRect.height || 180; // fallback height
+    
+    // Calculate available space from trigger element
+    const spaceBelow = viewport.height - triggerRect.bottom - spacing;
+    const spaceAbove = triggerRect.top - spacing;
+    const spaceRight = viewport.width - triggerRect.right - spacing;
+    const spaceLeft = triggerRect.left - spacing;
+    
+    // Enhanced positioning logic with better edge detection
+    let vertical, horizontal;
+    
+    // Vertical positioning with preference for below
+    if (spaceBelow >= dropdownHeight) {
+      vertical = 'bottom';
+    } else if (spaceAbove >= dropdownHeight) {
+      vertical = 'top';
+    } else {
+      // Choose side with more space
+      vertical = spaceBelow > spaceAbove ? 'bottom' : 'top';
+    }
+    
+    // Horizontal positioning with preference for right
+    if (spaceRight >= dropdownWidth) {
+      horizontal = 'right';
+    } else if (spaceLeft >= dropdownWidth) {
+      horizontal = 'left';
+    } else {
+      // Choose side with more space
+      horizontal = spaceRight > spaceLeft ? 'right' : 'left';
+    }
+    
+    // Check if we need center fallback (very constrained space)
+    const totalAvailableVertical = Math.max(spaceBelow, spaceAbove);
+    const totalAvailableHorizontal = Math.max(spaceRight, spaceLeft);
+    const needsCenter = (totalAvailableVertical < dropdownHeight * 0.7 || 
+                        totalAvailableHorizontal < dropdownWidth * 0.7) && 
+                       this.isMobile();
+    
+    if (needsCenter) {
+      return { 
+        position: 'center-overlay', 
+        needsOverlay: true,
+        constrainWidth: false
+      };
+    }
+    
+    return { 
+      position: `${vertical}-${horizontal}`,
+      needsOverlay: false,
+      constrainWidth: spaceRight < dropdownWidth && spaceLeft < dropdownWidth,
+      // Additional positioning data for fine-tuning
+      spaces: { spaceBelow, spaceAbove, spaceRight, spaceLeft },
+      dimensions: { dropdownWidth, dropdownHeight },
+      triggerRect: triggerRect
+    };
+  }
+  
+  applyPositioning(dropdown, positionData) {
+    // Clear existing position classes
+    dropdown.className = dropdown.className.replace(/position-\w+(-\w+)?/g, '');
+    dropdown.classList.remove('constrain-width');
+    
+    // Apply new position class
+    dropdown.classList.add(`position-${positionData.position}`);
+    
+    // Apply width constraint if needed
+    if (positionData.constrainWidth) {
+      dropdown.classList.add('constrain-width');
+    }
+    
+    // Handle center-overlay positioning
+    if (positionData.position === 'center-overlay') {
+      // For center positioning, we'll let CSS handle it
+      dropdown.style.position = 'fixed';
+      dropdown.style.top = '50%';
+      dropdown.style.left = '50%';
+      dropdown.style.transform = 'translate(-50%, -50%)';
+      dropdown.style.zIndex = '100';
+      dropdown.style.maxWidth = 'calc(100vw - 2rem)';
+    } else {
+      // Reset any inline styles for normal positioning
+      dropdown.style.position = '';
+      dropdown.style.top = '';
+      dropdown.style.left = '';
+      dropdown.style.transform = '';
+      dropdown.style.zIndex = '';
+      dropdown.style.maxWidth = '';
+    }
+  }
+  
+  showDropdown(dropdown, needsOverlay) {
+    if (needsOverlay) {
+      this.overlay.classList.add('show');
+    }
+    
+    // Add open class with smooth animation
+    dropdown.classList.add('open');
+    
+    // Ensure dropdown is visible and properly positioned
+    dropdown.style.display = 'block';
+    
+    // Focus management for keyboard accessibility
+    const firstButton = dropdown.querySelector('button');
+    if (firstButton) {
+      // Small delay to ensure positioning is complete
+      setTimeout(() => {
+        firstButton.focus();
+        // Announce to screen readers
+        this.announceDropdownOpen(dropdown);
+      }, 150);
+    }
+  }
+  
+  hideDropdown(dropdown) {
+    dropdown.classList.remove('open');
+    this.overlay.classList.remove('show');
+    
+    // Clear position classes and inline styles
+    dropdown.className = dropdown.className.replace(/position-\w+(-\w+)?/g, '');
+    dropdown.classList.remove('constrain-width');
+    
+    // Reset inline styles
+    dropdown.style.position = '';
+    dropdown.style.top = '';
+    dropdown.style.left = '';
+    dropdown.style.transform = '';
+    dropdown.style.zIndex = '';
+    dropdown.style.maxWidth = '';
+    dropdown.style.display = '';
+    
+    // Return focus to trigger element
+    if (this.activeDropdown && this.activeDropdown.trigger) {
+      this.activeDropdown.trigger.focus();
+    }
+  }
+  
+  repositionActiveDropdown() {
+    if (this.activeDropdown) {
+      const { trigger, dropdown } = this.activeDropdown;
+      const position = this.calculatePosition(trigger, dropdown);
+      this.applyPositioning(dropdown, position);
+      
+      // Update overlay visibility if needed
+      if (position.needsOverlay) {
+        this.overlay.classList.add('show');
+      } else {
+        this.overlay.classList.remove('show');
+      }
+    }
+  }
+  
+  isMobile() {
+    return window.innerWidth <= 768 || 'ontouchstart' in window;
+  }
+  
+  announceDropdownOpen(dropdown) {
+    // Create announcement for screen readers
+    const announcement = 'Priority options menu opened. Use arrow keys to navigate.';
+    
+    // Create or update live region
+    let liveRegion = document.getElementById('dropdown-announcements');
+    if (!liveRegion) {
+      liveRegion = document.createElement('div');
+      liveRegion.id = 'dropdown-announcements';
+      liveRegion.setAttribute('aria-live', 'polite');
+      liveRegion.setAttribute('aria-atomic', 'true');
+      liveRegion.className = 'sr-only';
+      document.body.appendChild(liveRegion);
+    }
+    
+    liveRegion.textContent = announcement;
+  }
+  
+  handleKeyboardNavigation(event, dropdown) {
+    try {
+      const buttons = dropdown.querySelectorAll('button');
+      if (buttons.length === 0) return;
+      
+      const currentIndex = Array.from(buttons).findIndex(btn => btn === event.target);
+      
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          const nextIndex = (currentIndex + 1) % buttons.length;
+          buttons[nextIndex]?.focus();
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          const prevIndex = (currentIndex - 1 + buttons.length) % buttons.length;
+          buttons[prevIndex]?.focus();
+          break;
+        case 'Escape':
+          event.preventDefault();
+          this.closeActiveDropdown();
+          break;
+        case 'Home':
+          event.preventDefault();
+          buttons[0]?.focus();
+          break;
+        case 'End':
+          event.preventDefault();
+          buttons[buttons.length - 1]?.focus();
+          break;
+        case 'Tab':
+          // Allow natural tab behavior but close dropdown
+          this.closeActiveDropdown();
+          break;
+      }
+    } catch (error) {
+      console.error('PriorityDropdownController: Keyboard navigation error:', error);
+    }
+  }
+}
+
 class NotesApp {
   constructor() {
     this.notes = [];
@@ -24,6 +337,9 @@ class NotesApp {
     
     // DOM elements cache
     this.elements = {};
+    
+    // Dropdown controller
+    this.dropdownController = new PriorityDropdownController();
     
     // Debounced functions
     this.debouncedSearch = this.debounce(this.performSearch.bind(this), 300);
@@ -180,11 +496,36 @@ class NotesApp {
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
 
-    // Global click handler to close note actions when clicking outside
+    // Global click handler to close note actions and priority dropdowns when clicking outside
     document.addEventListener('click', (e) => {
       // Don't close if clicking on action buttons or menus
       if (!e.target.closest('.note-actions') && !e.target.closest('.note-actions-btn')) {
         this.closeAllNoteActions();
+      }
+      
+      // Close priority dropdowns when clicking outside
+      if (!e.target.closest('.priority-tag') && 
+          !e.target.closest('.priority-dropdown') && 
+          !e.target.closest('.priority-dropdown-overlay')) {
+        
+        // Use the controller to close active dropdown
+        this.dropdownController.closeActiveDropdown();
+        
+        // Fallback cleanup for any missed dropdowns
+        document.querySelectorAll('.priority-dropdown.open').forEach(dropdown => {
+          dropdown.classList.remove('open');
+          const tag = dropdown.previousElementSibling;
+          if (tag && tag.classList.contains('priority-tag')) {
+            tag.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+    });
+    
+    // Additional keyboard handler for global escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.dropdownController.activeDropdown) {
+        this.dropdownController.closeActiveDropdown();
       }
     });
 
@@ -220,7 +561,9 @@ class NotesApp {
           updatedAt: note.updatedAt || note.createdAt || new Date().toISOString(),
           // New todo fields with backward compatibility and type safety
           isTodo: Boolean(note.isTodo),
-          isCompleted: Boolean(note.isCompleted)
+          isCompleted: Boolean(note.isCompleted),
+          // Priority field for Eisenhower matrix: 0=UI, 1=NI, 2=UN, 3=NN
+          priority: typeof note.priority === 'number' ? note.priority : 0
         }));
         this.saveNotes(); // Save normalized data
       }
@@ -252,7 +595,9 @@ class NotesApp {
       updatedAt: new Date().toISOString(),
       // Todo fields
       isTodo: noteData.isTodo || false,
-      isCompleted: noteData.isCompleted || false
+      isCompleted: noteData.isCompleted || false,
+      // Priority field (0=UI, 1=NI, 2=UN, 3=NN)
+      priority: noteData.priority || 0
     };
 
     this.notes.unshift(note); // Add to beginning for chronological order
@@ -277,7 +622,9 @@ class NotesApp {
       updatedAt: new Date().toISOString(),
       // Update todo fields if provided
       isTodo: noteData.hasOwnProperty('isTodo') ? noteData.isTodo : this.notes[noteIndex].isTodo,
-      isCompleted: noteData.hasOwnProperty('isCompleted') ? noteData.isCompleted : this.notes[noteIndex].isCompleted
+      isCompleted: noteData.hasOwnProperty('isCompleted') ? noteData.isCompleted : this.notes[noteIndex].isCompleted,
+      // Update priority if provided
+      priority: noteData.hasOwnProperty('priority') ? noteData.priority : this.notes[noteIndex].priority
     };
 
     this.notes[noteIndex] = updatedNote;
@@ -653,96 +1000,205 @@ class NotesApp {
       card.classList.add('highlighted');
     }
 
-    // Add class for content-only notes
-    if (!note.title.trim()) {
-      card.classList.add('content-only');
-    }
-
-    // Add todo-specific classes
+    // Add todo-specific classes for glassmorphic styling
     if (note.isTodo) {
-      card.classList.add('todo-card');
-      if (note.isCompleted) {
-        card.classList.add('completed');
-      }
+      card.classList.add('todo');
     }
 
-    const todoStatusIndicator = `
-      <div class="todo-status-wrapper">
-        <button class="todo-status-btn ${this.getTodoStatusClass(note)}"
-                data-note-id="${note.id}"
-                aria-label="Toggle todo status: ${this.getTodoStatusLabel(note)}"
-                title="Click to ${this.getNextActionLabel(note)}">
-          <span class="status-icon">${this.getTodoStatusIcon(note)}</span>
-        </button>
+    // Priority labels and classes
+    const priorities = [
+      { label: 'Urgent & Important', shortLabel: 'UI', className: 'priority-urgent-important' },
+      { label: 'Not Urgent but Important', shortLabel: 'NI', className: 'priority-not-urgent-important' },
+      { label: 'Urgent but Not Important', shortLabel: 'UN', className: 'priority-urgent-not-important' },
+      { label: 'Not Urgent & Not Important', shortLabel: 'NN', className: 'priority-not-urgent-not-important' }
+    ];
+    
+    const currentPriority = priorities[note.priority || 0];
+    
+    // Mode toggle button
+    const modeToggleHtml = `
+      <button class="mode-toggle ${note.isTodo ? 'todo' : ''}" 
+              data-note-id="${note.id}"
+              aria-pressed="${note.isTodo}"
+              aria-label="Toggle between note and todo mode"
+              title="Switch to ${note.isTodo ? 'note' : 'todo'} mode">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5l5 5v9a2 2 0 01-2 2z" />
+        </svg>
+        <span class="mode-text">${note.isTodo ? 'Todo' : 'Note'}</span>
+      </button>
+    `;
+    
+    // Todo controls (only shown in todo mode)
+    const todoControlsHtml = note.isTodo ? `
+      <div class="todo-controls">
+        <div class="flex">
+          <input type="checkbox" 
+                 class="checkbox-todo" 
+                 data-note-id="${note.id}"
+                 ${note.isCompleted ? 'checked' : ''}
+                 aria-label="Mark task as completed" />
+          <label class="todo-label" for="checkbox-${note.id}">${this.escapeHtml(note.title || note.content)}</label>
+        </div>
+        <div class="priority-tag ${currentPriority.className}" 
+             data-note-id="${note.id}"
+             tabindex="0" 
+             role="button" 
+             aria-haspopup="listbox" 
+             aria-expanded="false" 
+             title="Priority: ${currentPriority.label}"
+             aria-label="Task priority: ${currentPriority.label}">
+          ${currentPriority.shortLabel}
+        </div>
+        <div class="priority-dropdown position-bottom-right" 
+             data-note-id="${note.id}"
+             role="listbox" 
+             aria-labelledby="priority-tag-${note.id}">
+          ${priorities.map((priority, index) => `
+            <button class="${priority.className}" 
+                    role="option" 
+                    tabindex="-1" 
+                    data-priority="${index}"
+                    data-note-id="${note.id}"
+                    title="Set priority to ${priority.label}">
+              <span class="priority-color"></span> ${priority.label}
+            </button>
+          `).join('')}
+        </div>
       </div>
+    ` : '';
+    
+    // Card content based on mode
+    const cardContentHtml = note.isTodo ? '' : `
+      <div class="card-title">${this.escapeHtml(note.title || this.generateTitle(note.content))}</div>
+      <div class="card-content">${this.highlightSearchTerm(this.escapeHtml(this.truncateContent(note.content, 120)))}</div>
     `;
 
     card.innerHTML = `
-      <header class="note-header">
-        <time class="note-date" datetime="${note.createdAt}" title="${this.formatFullDate(note.createdAt)}">
-          ${this.formatFriendlyDate(note.createdAt)}
-        </time>
-        <time class="note-timestamp" datetime="${note.createdAt}" title="${this.formatFullDate(note.createdAt)}">
-          ${this.formatRelativeTime(note.createdAt)}
-        </time>
-      </header>
+      ${modeToggleHtml}
+      ${cardContentHtml}
+      ${todoControlsHtml}
       
-      <div class="note-content">
-        ${todoStatusIndicator}
-        <div class="note-text">
-          ${note.title.trim() ? `<h3 class="note-title">${this.highlightSearchTerm(this.escapeHtml(note.title))}</h3>` : ''}
-          <p class="note-body">${this.highlightSearchTerm(this.escapeHtml(this.truncateContent(note.content, 150)))}</p>
-        </div>
-      </div>
-      
-      <footer class="note-footer">
-        <div class="note-tags">
-          ${note.tags.map(tag => `
-            <span class="note-tag ${this.getTagClass(tag)}">${this.escapeHtml(tag)}</span>
-          `).join('')}
-          <!-- Removed todo tag to prevent layout shifts -->
-        </div>
-        <button class="note-actions-btn" aria-label="Note actions" title="Actions">⋮</button>
-      </footer>
-      
-      <div class="note-actions" style="display: none;">
-        <button class="action-btn edit-btn" aria-label="Edit note" title="Edit">✏️</button>
-        <button class="action-btn delete-btn" aria-label="Delete note" title="Delete">🗑️</button>
+      <div class="note-actions">
+        <button class="action-btn edit-btn" aria-label="Edit ${note.isTodo ? 'todo' : 'note'}" title="Edit">✏️</button>
+        <button class="action-btn delete-btn" aria-label="Delete ${note.isTodo ? 'todo' : 'note'}" title="Delete">🗑️</button>
       </div>
     `;
+    
+    // Set proper checkbox ID for accessibility
+    const checkbox = card.querySelector('.checkbox-todo');
+    if (checkbox) {
+      checkbox.id = `checkbox-${note.id}`;
+    }
 
     // Add event listeners
-    this.bindNoteCardEvents(card, note);
+    this.bindUnifiedCardEvents(card, note);
 
     return card;
   }
 
-  bindNoteCardEvents(card, note) {
+  bindUnifiedCardEvents(card, note) {
     const editBtn = card.querySelector('.edit-btn');
     const deleteBtn = card.querySelector('.delete-btn');
-    const actionsBtn = card.querySelector('.note-actions-btn');
     const actions = card.querySelector('.note-actions');
-    const todoBtn = card.querySelector('.todo-status-btn');
+    const modeToggle = card.querySelector('.mode-toggle');
+    const todoCheckbox = card.querySelector('.checkbox-todo');
+    const priorityTag = card.querySelector('.priority-tag');
+    const priorityDropdown = card.querySelector('.priority-dropdown');
+    const priorityButtons = priorityDropdown?.querySelectorAll('button') || [];
 
-    // Todo status toggle
-    todoBtn?.addEventListener('click', (e) => {
+    // Mode toggle (note/todo switch)
+    modeToggle?.addEventListener('click', (e) => {
       e.stopPropagation();
-      e.preventDefault();
-      
-      // Add click animation
-      todoBtn.classList.add('clicking');
-      setTimeout(() => todoBtn.classList.remove('clicking'), 150);
-      
-      this.toggleTodoStatus(note.id);
+      this.toggleNoteMode(note.id);
     });
 
-    // Keyboard support for todo button
-    todoBtn?.addEventListener('keydown', (e) => {
+    // Todo checkbox
+    todoCheckbox?.addEventListener('change', (e) => {
+      e.stopPropagation();
+      this.toggleTodoCompletion(note.id);
+    });
+
+    // Priority tag click with smart positioning and error handling
+    priorityTag?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      
+      try {
+        const expanded = priorityTag.getAttribute('aria-expanded') === 'true';
+        
+        if (expanded) {
+          priorityTag.setAttribute('aria-expanded', 'false');
+          this.dropdownController.closeActiveDropdown();
+        } else {
+          // Close other open dropdowns first
+          this.dropdownController.closeActiveDropdown();
+          
+          // Clean up any orphaned dropdowns
+          document.querySelectorAll('.priority-dropdown.open').forEach(dropdown => {
+            dropdown.classList.remove('open');
+            const tag = dropdown.previousElementSibling;
+            if (tag && tag.classList.contains('priority-tag')) {
+              tag.setAttribute('aria-expanded', 'false');
+            }
+          });
+          
+          // Open the new dropdown
+          priorityTag.setAttribute('aria-expanded', 'true');
+          this.dropdownController.openDropdown(priorityTag, priorityDropdown);
+        }
+      } catch (error) {
+        console.error('Priority tag click error:', error);
+        // Fallback: ensure clean state
+        priorityTag.setAttribute('aria-expanded', 'false');
+        this.dropdownController.closeActiveDropdown();
+      }
+    });
+    
+    // Enhanced keyboard support for priority tag
+    priorityTag?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        e.stopPropagation();
-        this.toggleTodoStatus(note.id);
+        priorityTag.click();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        this.dropdownController.closeActiveDropdown();
       }
+    });
+
+    // Priority selection with enhanced keyboard navigation and error handling
+    priorityButtons.forEach((btn, index) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        try {
+          this.updateNotePriority(note.id, index);
+          if (priorityTag) {
+            priorityTag.setAttribute('aria-expanded', 'false');
+          }
+          this.dropdownController.closeActiveDropdown();
+          
+          // Return focus to trigger element
+          setTimeout(() => {
+            if (priorityTag) {
+              priorityTag.focus();
+            }
+          }, 100);
+        } catch (error) {
+          console.error('Priority selection error:', error);
+          this.dropdownController.closeActiveDropdown();
+        }
+      });
+      
+      btn.addEventListener('keydown', (e) => {
+        // Use the enhanced keyboard navigation handler
+        this.dropdownController.handleKeyboardNavigation(e, priorityDropdown);
+        
+        // Handle selection keys
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          btn.click();
+        }
+      });
     });
 
     // Edit button
@@ -757,43 +1213,21 @@ class NotesApp {
       this.confirmDeleteNote(note.id);
     });
 
-    // Actions toggle
-    actionsBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      
-      // Close all other open action menus first
-      this.closeAllNoteActions();
-      
-      // Toggle this action menu
-      const isVisible = actions.style.display !== 'none';
-      actions.style.display = isVisible ? 'none' : 'flex';
-    });
-
-    // Card click (read full note) - exclude clicks on interactive elements
+    // Card click (edit note) - exclude clicks on interactive elements
     card.addEventListener('click', (e) => {
       // Don't open modal if clicking on interactive elements
-      if (e.target.closest('.note-actions-btn, .note-tag, .action-btn, .todo-status-btn')) {
+      if (e.target.closest('.mode-toggle, .checkbox-todo, .priority-tag, .priority-dropdown, .action-btn')) {
         return;
       }
-      this.openViewNoteModal(note);
+      this.openEditNoteModal(note);
     });
 
     // Keyboard navigation
     card.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        this.openViewNoteModal(note);
+        this.openEditNoteModal(note);
       }
-    });
-
-    // Tag clicks
-    card.querySelectorAll('.note-tag').forEach(tagEl => {
-      tagEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const tag = tagEl.textContent;
-        // All tags are now filterable since we removed auto-generated todo tags
-        this.toggleTagFilter(tag);
-      });
     });
   }
 
@@ -929,7 +1363,8 @@ class NotesApp {
         content, 
         tags, 
         isTodo: this.elements.noteIsTodo.checked,
-        isCompleted: false // New todo items start as incomplete
+        isCompleted: false, // New todo items start as incomplete
+        priority: 0 // Default to Urgent & Important
       };
 
       if (this.editingNoteId) {
@@ -1328,6 +1763,24 @@ class NotesApp {
   // ==========================================================================
 
   handleKeyboardShortcuts(e) {
+    // Escape: Close dropdowns and modals with priority
+    if (e.key === 'Escape') {
+      // First priority: close active dropdown
+      if (this.dropdownController.activeDropdown) {
+        this.dropdownController.closeActiveDropdown();
+        return;
+      }
+      
+      // Second priority: close modal
+      if (this.elements.modalOverlay.classList.contains('show')) {
+        this.closeModal();
+        return;
+      }
+      
+      // Third priority: handle other escape actions
+      return;
+    }
+
     // Ctrl/Cmd + N: New note
     if ((e.ctrlKey || e.metaKey) && e.key === 'n' && !e.shiftKey) {
       e.preventDefault();
@@ -1349,11 +1802,10 @@ class NotesApp {
       return;
     }
 
-    // Escape: Close modal, clear search, or close note actions
+    // Additional escape handling for other UI elements
     if (e.key === 'Escape') {
-      if (this.elements.modalOverlay.style.display === 'flex') {
-        this.closeModal();
-      } else if (this.elements.confirmModalOverlay.style.display === 'flex') {
+      // Check for confirmation modal
+      if (this.elements.confirmModalOverlay.style.display === 'flex') {
         this.closeConfirmModal();
       } else if (this.currentSearch) {
         this.clearSearch();
@@ -1606,6 +2058,65 @@ class NotesApp {
   }
 
   
+  // ==========================================================================
+  // Unified Card System - New Methods
+  // ==========================================================================
+
+  toggleNoteMode(noteId) {
+    const noteIndex = this.notes.findIndex(note => note.id === noteId);
+    if (noteIndex === -1) return;
+
+    const note = this.notes[noteIndex];
+    note.isTodo = !note.isTodo;
+    
+    // If switching to todo mode and no title, keep content visible
+    // If switching from todo to note, ensure we have a proper title
+    if (!note.isTodo && !note.title.trim()) {
+      note.title = this.generateTitle(note.content);
+    }
+    
+    note.updatedAt = new Date().toISOString();
+    
+    this.saveNotes();
+    this.applyFilters();
+    this.renderNotes();
+    
+    const modeText = note.isTodo ? 'todo' : 'note';
+    this.showToast(`Converted to ${modeText}`, 'success');
+  }
+
+  toggleTodoCompletion(noteId) {
+    const noteIndex = this.notes.findIndex(note => note.id === noteId);
+    if (noteIndex === -1) return;
+
+    const note = this.notes[noteIndex];
+    note.isCompleted = !note.isCompleted;
+    note.updatedAt = new Date().toISOString();
+    
+    this.saveNotes();
+    this.applyFilters();
+    this.renderNotes();
+    
+    const statusText = note.isCompleted ? 'completed' : 'active';
+    this.showToast(`Todo marked as ${statusText}`, 'success');
+  }
+
+  updateNotePriority(noteId, priority) {
+    const noteIndex = this.notes.findIndex(note => note.id === noteId);
+    if (noteIndex === -1) return;
+
+    const note = this.notes[noteIndex];
+    note.priority = priority;
+    note.updatedAt = new Date().toISOString();
+    
+    this.saveNotes();
+    this.applyFilters();
+    this.renderNotes();
+    
+    const priorities = ['Urgent & Important', 'Not Urgent but Important', 'Urgent but Not Important', 'Not Urgent & Not Important'];
+    this.showToast(`Priority set to ${priorities[priority]}`, 'success');
+  }
+
   // ==========================================================================
   // Todo Feature Validation (for testing)
   // ==========================================================================

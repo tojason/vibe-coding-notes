@@ -530,6 +530,7 @@ pre {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  align-items: center;
 }
 
 /* ==========================================================================
@@ -552,6 +553,8 @@ pre {
   order: -1;
   position: relative;
   overflow: hidden;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .add-note-card::before {
@@ -2084,4 +2087,1175 @@ pre {
     background: #0000FF;
     border-color: #000;
   }
+}
+
+/* ==========================================================================
+   Unified Note/Todo Card Design - Glassmorphic Theme
+   ========================================================================== */
+
+/* Glassmorphic theme variables */
+:root {
+  --glass-background: rgba(50, 50, 55, 0.75);
+  --glass-foreground: #e0e0e0;
+  --glass-border: rgba(100, 100, 110, 0.6);
+  --glass-shadow: 0 20px 25px 0 rgba(0, 0, 0, 0.8);
+  --glass-radius: 1rem;
+  --glass-primary: #4f46e5;
+  --glass-primary-foreground: #ffffff;
+  --glass-muted-foreground: #9ca3af;
+  
+  /* Enhanced checkbox variables for maximum visibility and contrast */
+  --checkbox-size: 28px;
+  --checkbox-border: 3px;
+  --checkbox-bg: #ffffff; /* Pure white background for high contrast */
+  --checkbox-border-color: #4f46e5; /* Strong primary color border */
+  --checkbox-checked-bg: #4f46e5;
+  --checkbox-checked-border: #4338ca; /* Slightly darker when checked */
+  --checkbox-focus-ring: 0 0 0 3px rgba(79, 70, 229, 0.4);
+  --checkbox-hover-border: #6366f1;
+  --checkbox-hover-bg: #f8fafc;
+}
+
+[data-theme="dark"] {
+  --glass-background: rgba(40, 40, 45, 0.85);
+  --glass-foreground: #f0f0f0;
+  --glass-border: rgba(120, 120, 130, 0.7);
+  
+  /* Dark mode checkbox adjustments - maintain high contrast */
+  --checkbox-bg: #1f2937; /* Dark but visible background */
+  --checkbox-border-color: #6366f1; /* Bright border for visibility */
+  --checkbox-checked-bg: #6366f1;
+  --checkbox-checked-border: #4f46e5;
+  --checkbox-hover-border: #818cf8;
+  --checkbox-hover-bg: #374151;
+}
+
+/* Unified Card Base Styling - Redesigned for Better Proportions */
+.note-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  padding: 1rem;
+  padding-top: 3rem; /* space for mode toggle */
+  padding-bottom: 1rem; /* base padding, reduced from excessive height */
+  font-family: var(--font-primary);
+  background: var(--glass-background);
+  color: var(--glass-foreground);
+  border: 1px solid var(--glass-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  margin: 0 auto;
+  min-height: 90px; /* Further reduced for better content density */
+}
+
+.note-card.todo {
+  border-color: rgba(130, 70, 150, 0.8);
+  background: rgba(80, 40, 90, 0.75);
+  padding-bottom: 2rem; /* Significantly reduced to eliminate wasted space */
+  min-height: 100px; /* Optimized for todo content without excessive height */
+}
+
+.note-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 25px 30px 0 rgba(0, 0, 0, 0.9);
+}
+
+/* Mode Toggle Button */
+.mode-toggle {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: var(--glass-background);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--glass-foreground);
+  user-select: none;
+  z-index: 15;
+  transition: background-color 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  max-width: calc(100% - 1.5rem);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.mode-toggle.todo {
+  background: rgba(80, 40, 90, 0.75);
+  border-color: rgba(130, 70, 150, 0.8);
+}
+
+.mode-toggle:hover {
+  background-color: var(--glass-primary);
+  color: var(--glass-primary-foreground);
+}
+
+/* Card Title and Content */
+.card-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-bottom: 0.6rem;
+  color: var(--glass-foreground);
+  line-height: 1.3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  padding-right: 1rem; /* avoid overlap with mode toggle */
+}
+
+.card-content {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--glass-foreground);
+  margin-bottom: 0.5rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Todo Controls */
+.todo-controls {
+  position: relative;
+  margin-top: 0.5rem;
+  padding-right: 0.5rem; /* space for priority tag */
+}
+
+/* Hide content in note mode, show in todo mode */
+.note-card:not(.todo) .todo-controls {
+  display: none;
+}
+
+.note-card.todo .card-title,
+.note-card.todo .card-content {
+  display: none;
+}
+
+/* Redesigned Todo Layout - Optimized Spacing and Text Handling */
+.todo-controls .flex {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem; /* Further reduced for compact layout */
+  gap: 0.75rem; /* Clear gap between checkbox and text */
+  min-height: 44px; /* Ensure adequate touch target area */
+}
+
+/* Redesigned Checkbox - High Visibility and Contrast */
+.checkbox-todo {
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+  min-width: var(--checkbox-size); /* Prevent shrinking */
+  min-height: var(--checkbox-size);
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--checkbox-bg);
+  border: var(--checkbox-border) solid var(--checkbox-border-color);
+  border-radius: 8px; /* Slightly more rounded for modern look */
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  
+  /* Remove margin to use gap from flex container */
+  margin: 0;
+  
+  /* Ensure proper touch target through flex container */
+  box-sizing: border-box;
+  
+  /* High contrast focus ring for accessibility */
+  outline: none;
+  
+  /* Smooth transitions for all interactions */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.checkbox-todo:focus {
+  box-shadow: var(--checkbox-focus-ring);
+  border-color: var(--checkbox-hover-border);
+}
+
+.checkbox-todo:hover {
+  border-color: var(--checkbox-hover-border);
+  background: var(--checkbox-hover-bg);
+  transform: scale(1.08); /* Slightly more pronounced hover effect */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Custom checkmark with smooth animation */
+.checkbox-todo::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px; /* Slightly larger checkmark */
+  height: 16px;
+  border: 3px solid transparent;
+  border-right-color: white;
+  border-bottom-color: white;
+  transform: translate(-50%, -60%) rotate(45deg) scale(0);
+  transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  opacity: 0;
+}
+
+.checkbox-todo:checked::after {
+  transform: translate(-50%, -60%) rotate(45deg) scale(1);
+  opacity: 1;
+}
+
+.checkbox-todo:checked {
+  background: var(--checkbox-checked-bg);
+  border-color: var(--checkbox-checked-border);
+  animation: checkboxChecked 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 2px 12px rgba(79, 70, 229, 0.3);
+}
+
+@keyframes checkboxChecked {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.95); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.todo-label {
+  color: var(--glass-foreground);
+  font-size: 1rem;
+  font-weight: 500; /* Slightly bolder for better readability */
+  line-height: 1.5; /* Improved line height for readability */
+  flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: calc(100% - 4rem); /* Adjusted for priority tag space */
+  
+  /* NO TEXT TRUNCATION - Allow full text to display */
+  display: block;
+  /* Remove line clamping to eliminate text truncation */
+  overflow: visible;
+  
+  /* Perfect alignment with checkbox center */
+  margin-top: 0;
+  padding-top: 4px; /* Precise optical alignment with checkbox center */
+  
+  /* Ensure text doesn't get cut off */
+  white-space: normal;
+  text-overflow: clip;
+  letter-spacing: 0.01em;
+}
+
+/* Priority System */
+/* Redesigned Priority Tag - Better Positioning and Accessibility */
+.priority-tag {
+  position: absolute;
+  bottom: 0.5rem; /* Reduced from 0.75rem for tighter layout */
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px; /* Slightly less rounded for modern look */
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  color: var(--glass-primary-foreground);
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+  border: 2px solid transparent; /* Thicker border for better definition */
+  z-index: 12;
+  max-width: calc(100% - 1.5rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  
+  /* Enhanced accessibility */
+  min-width: 44px;
+  min-height: 32px;
+  
+  /* Better visual hierarchy */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.priority-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.priority-tag:focus {
+  outline: 2px solid var(--glass-primary);
+  outline-offset: 2px;
+}
+
+.priority-urgent-important {
+  background-color: #ef4444;
+  border-color: #b91c1c;
+}
+
+.priority-not-urgent-important {
+  background-color: #fbbf24;
+  color: #1f2937;
+  border-color: #a16207;
+}
+
+.priority-urgent-not-important {
+  background-color: #60a5fa;
+  border-color: #2563eb;
+}
+
+.priority-not-urgent-not-important {
+  background-color: #6b7280;
+  border-color: #374151;
+}
+
+/* Priority Dropdown - Smart Positioning System */
+.priority-dropdown {
+  position: absolute;
+  background: var(--glass-background);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+  z-index: 25;
+  display: none;
+  min-width: 160px;
+  max-width: 200px;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  
+  /* Animation properties */
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  
+  /* Performance optimizations */
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  
+  /* Prevent flickering on mobile */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  
+  /* GPU acceleration */
+  transform: scale(0.95) translateZ(0);
+}
+
+/* Default positioning (bottom-right) */
+.priority-dropdown.position-bottom-right {
+  top: calc(100% + 0.5rem);
+  right: 0;
+  transform-origin: top right;
+}
+
+/* Alternative positions for viewport collision avoidance */
+.priority-dropdown.position-bottom-left {
+  top: calc(100% + 0.5rem);
+  left: 0;
+  transform-origin: top left;
+}
+
+.priority-dropdown.position-top-right {
+  bottom: calc(100% + 0.5rem);
+  right: 0;
+  transform-origin: bottom right;
+}
+
+.priority-dropdown.position-top-left {
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  transform-origin: bottom left;
+}
+
+/* Centered overlay fallback for extreme viewport constraints */
+.priority-dropdown.position-center-overlay {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) scale(0.95) !important;
+  z-index: 100 !important;
+  max-width: calc(100vw - 2rem) !important;
+  transform-origin: center center;
+}
+
+/* Width constraint for narrow viewports */
+.priority-dropdown.constrain-width {
+  max-width: calc(100vw - 2rem);
+  min-width: 140px;
+}
+
+/* Enhanced positioning for edge cases */
+.priority-dropdown.position-bottom-right.constrain-width {
+  right: auto;
+  left: 0;
+  transform-origin: top left;
+}
+
+.priority-dropdown.position-bottom-left.constrain-width {
+  left: auto;
+  right: 0;
+  transform-origin: top right;
+}
+
+/* Prevent dropdown from going outside viewport */
+.priority-dropdown {
+  max-width: min(200px, calc(100vw - 1rem));
+  max-height: min(240px, calc(100vh - 2rem));
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* Enhanced scrolling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-400) transparent;
+}
+
+.priority-dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+
+.priority-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.priority-dropdown::-webkit-scrollbar-thumb {
+  background: var(--primary-400);
+  border-radius: 2px;
+}
+
+.priority-dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-500);
+}
+
+/* Safe positioning - prevent cut-off at viewport edges */
+.priority-dropdown.position-bottom-right {
+  /* Ensure dropdown doesn't go beyond right edge */
+  right: max(0px, min(0px, calc(100vw - var(--dropdown-width, 200px) - 1rem)));
+}
+
+.priority-dropdown.position-bottom-left {
+  /* Ensure dropdown doesn't go beyond left edge */
+  left: max(0px, min(0px, calc(100vw - var(--dropdown-width, 200px) - 1rem)));
+}
+
+/* Dynamic viewport protection */
+@supports (width: 100dvw) {
+  .priority-dropdown {
+    max-width: min(200px, calc(100dvw - 1rem));
+    max-height: min(240px, calc(100dvh - 2rem));
+  }
+  
+  .priority-dropdown.position-center-overlay {
+    max-width: calc(100dvw - 1rem) !important;
+  }
+}
+
+/* Show state with smooth animation */
+.priority-dropdown.open {
+  display: block;
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Specific transform for centered overlay */
+.priority-dropdown.position-center-overlay.open {
+  transform: translate(-50%, -50%) scale(1) !important;
+}
+
+/* Smooth entrance animations by position */
+.priority-dropdown.position-bottom-right.open,
+.priority-dropdown.position-bottom-left.open {
+  animation: dropdownSlideDown 0.2s ease-out;
+}
+
+.priority-dropdown.position-top-right.open,
+.priority-dropdown.position-top-left.open {
+  animation: dropdownSlideUp 0.2s ease-out;
+}
+
+.priority-dropdown.position-center-overlay.open {
+  animation: dropdownFadeIn 0.25s ease-out;
+}
+
+@keyframes dropdownSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dropdownSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Enhanced viewport constraints with safe areas */
+.priority-dropdown {
+  max-height: min(200px, calc(100vh - 2rem));
+  overflow-y: auto;
+}
+
+/* iOS Safari safe area support */
+@supports (padding: max(0px)) {
+  .priority-dropdown.position-center-overlay {
+    max-width: calc(100vw - max(1rem, env(safe-area-inset-left)) - max(1rem, env(safe-area-inset-right))) !important;
+    max-height: calc(100vh - max(2rem, env(safe-area-inset-top)) - max(2rem, env(safe-area-inset-bottom))) !important;
+  }
+  
+  .priority-dropdown-overlay {
+    padding: max(0px, env(safe-area-inset-top)) max(0px, env(safe-area-inset-right)) max(0px, env(safe-area-inset-bottom)) max(0px, env(safe-area-inset-left));
+  }
+}
+
+.priority-dropdown button {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--glass-foreground);
+  transition: background-color 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.priority-dropdown button:hover {
+  background-color: var(--glass-primary);
+  color: var(--glass-primary-foreground);
+}
+
+.priority-dropdown button:focus {
+  background-color: var(--glass-primary);
+  color: var(--glass-primary-foreground);
+  outline: none;
+}
+
+/* Enhanced keyboard navigation styling */
+.priority-dropdown button:focus-visible {
+  background-color: var(--glass-primary);
+  color: var(--glass-primary-foreground);
+  outline: 2px solid var(--glass-primary);
+  outline-offset: -2px;
+  position: relative;
+}
+
+/* Ensure focus is always visible */
+.priority-dropdown button:focus {
+  z-index: 1;
+}
+
+/* Windows High Contrast Mode support */
+@media (prefers-contrast: high) {
+  .priority-dropdown {
+    border: 2px solid ButtonText;
+    background: Window;
+  }
+  
+  .priority-dropdown button {
+    color: ButtonText;
+    background: Window;
+    border-bottom: 1px solid ButtonText;
+  }
+  
+  .priority-dropdown button:hover,
+  .priority-dropdown button:focus {
+    background: Highlight;
+    color: HighlightText;
+    border-color: HighlightText;
+  }
+}
+
+.priority-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.priority-urgent-important .priority-color {
+  background-color: #ef4444;
+}
+
+.priority-not-urgent-important .priority-color {
+  background-color: #fbbf24;
+}
+
+.priority-urgent-not-important .priority-color {
+  background-color: #60a5fa;
+}
+
+.priority-not-urgent-not-important .priority-color {
+  background-color: #6b7280;
+}
+
+/* Action Buttons - Updated for glassmorphic theme */
+.note-actions {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  display: flex;
+  gap: 0.4rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 18;
+  max-width: calc(100% - 8rem); /* leave space for mode toggle */
+}
+
+.note-card:hover .note-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--glass-radius);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  color: var(--glass-foreground);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.action-btn:hover {
+  background: var(--glass-primary);
+  color: var(--glass-primary-foreground);
+  transform: scale(1.05);
+}
+
+/* Mobile Responsiveness - Optimized for Touch */
+@media (max-width: 768px) {
+  .note-card {
+    max-width: 100%;
+    margin: 0;
+    padding: 0.75rem;
+    padding-top: 2.5rem;
+    min-height: 85px; /* Further reduced for better mobile density */
+  }
+  
+  .note-card.todo {
+    padding-bottom: 1.75rem; /* Significantly reduced for mobile */
+    min-height: 95px;
+  }
+  
+  .mode-toggle {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    top: 0.5rem;
+    right: 0.5rem;
+    gap: 0.3rem;
+  }
+  
+  .card-title {
+    font-size: 1.125rem;
+    padding-right: 0.5rem;
+  }
+  
+  .card-content {
+    font-size: 0.95rem;
+  }
+  
+  /* Mobile checkbox - maintain good size for touch */
+  :root {
+    --checkbox-size: 26px; /* Slightly smaller but still very visible */
+  }
+  
+  .checkbox-todo {
+    width: var(--checkbox-size);
+    height: var(--checkbox-size);
+    min-width: var(--checkbox-size);
+    min-height: var(--checkbox-size);
+  }
+  
+  .todo-label {
+    font-size: 0.95rem;
+    max-width: calc(100% - 3.5rem); /* Optimized for mobile layout */
+    /* NO line clamping on mobile either - keep full text visible */
+    padding-top: 3px; /* Better alignment with mobile checkbox */
+  }
+  
+  .priority-tag {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.45rem;
+    bottom: 0.4rem; /* Tighter positioning */
+    right: 0.5rem;
+    min-width: 44px; /* Maintain touch target */
+    min-height: 30px;
+  }
+  
+  /* Mobile-optimized dropdown positioning */
+  .priority-dropdown {
+    min-width: min(140px, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    font-size: 0.85rem;
+  }
+  
+  /* Enhanced mobile positioning - prefer bottom for thumb reach */
+  .priority-dropdown.position-top-right,
+  .priority-dropdown.position-top-left {
+    bottom: auto !important;
+    top: calc(100% + 0.5rem) !important;
+  }
+  
+  /* Mobile edge protection */
+  .priority-dropdown.position-bottom-right {
+    right: max(0px, min(0.5rem, calc(100vw - 160px)));
+  }
+  
+  .priority-dropdown.position-bottom-left {
+    left: max(0px, min(0.5rem, calc(100vw - 160px)));
+  }
+  
+  /* Mobile center overlay adjustments */
+  .priority-dropdown.position-center-overlay {
+    max-width: calc(100vw - 1rem) !important;
+    min-width: 160px !important;
+    width: auto !important;
+    margin: 0.5rem !important;
+  }
+  
+  /* Touch-friendly button sizing on mobile */
+  .priority-dropdown button {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+    touch-action: manipulation;
+  }
+  
+  /* Improved mobile scrolling */
+  .priority-dropdown {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Prevent zoom on iOS */
+  .priority-dropdown button {
+    font-size: max(16px, 0.9rem);
+  }
+  
+  .note-actions {
+    top: 0.5rem;
+    left: 0.5rem;
+    gap: 0.3rem;
+    max-width: calc(100% - 6rem);
+  }
+  
+  .action-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Grid Layout Updates for Unified Cards */
+@media (min-width: 1024px) {
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: var(--space-6);
+    justify-items: center;
+    align-items: start; /* Prevent cards from stretching */
+  }
+  
+  .add-note-card {
+    grid-column: 1 / -1;
+    max-width: 500px;
+  }
+  
+  /* Ensure consistent card sizing */
+  .note-card {
+    width: 100%;
+    max-width: 380px;
+  }
+}
+
+/* Animation for mode switching */
+@keyframes modeSwitch {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.note-card.mode-switching {
+  animation: modeSwitch 0.3s ease-out;
+}
+
+/* Additional layout safety measures */
+.note-card .card-title,
+.note-card .card-content,
+.note-card .todo-label {
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Prevent button text from wrapping */
+.mode-toggle,
+.priority-tag {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Priority dropdown overlay for center positioning */
+.priority-dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 99;
+  display: none;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+.priority-dropdown-overlay.show {
+  display: block;
+  opacity: 1;
+}
+
+/* Click outside to close hint */
+.priority-dropdown-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  cursor: pointer;
+}
+
+/* Enhanced todo label - no truncation, proper wrapping */
+.todo-label {
+  display: block;
+  overflow: visible; /* Allow full text to show */
+  text-overflow: clip; /* No ellipsis truncation */
+  /* Remove webkit box properties that cause truncation */
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Prevent layout shift when hovering */
+.note-card:hover .note-actions {
+  opacity: 1;
+}
+
+.note-card .note-actions {
+  pointer-events: auto;
+}
+
+/* Improve click targets on mobile */
+@media (pointer: coarse) {
+  .mode-toggle,
+  .priority-tag,
+  .action-btn,
+  .checkbox-todo {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .mode-toggle {
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .priority-tag {
+    padding: 0.3rem 0.5rem;
+    touch-action: manipulation;
+  }
+  
+  /* Enhanced touch targets for dropdowns */
+  .priority-dropdown button {
+    min-height: 48px;
+    padding: 0.8rem 1rem;
+    font-size: max(16px, 0.9rem); /* Prevent zoom on iOS */
+    touch-action: manipulation;
+  }
+  
+  /* Improve touch scrolling */
+  .priority-dropdown {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Ensure proper z-index layering */
+.mode-toggle {
+  z-index: 15;
+}
+
+.priority-tag {
+  z-index: 12;
+}
+
+.priority-dropdown {
+  z-index: 25;
+}
+
+.priority-dropdown.position-center-overlay {
+  z-index: 100;
+}
+
+.priority-dropdown-overlay {
+  z-index: 99;
+}
+
+.note-actions {
+  z-index: 18;
+}
+
+/* Ensure dropdowns always appear above other content */
+.priority-dropdown,
+.priority-dropdown-overlay {
+  position: fixed; /* Use fixed positioning to avoid stacking context issues */
+}
+
+/* Exception for normal dropdown positioning */
+.priority-dropdown:not(.position-center-overlay) {
+  position: absolute;
+}
+
+/* Browser-specific fixes */
+@supports (-webkit-backdrop-filter: blur(1px)) {
+  .priority-dropdown-overlay {
+    -webkit-backdrop-filter: blur(3px);
+  }
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .priority-dropdown-overlay {
+    backdrop-filter: blur(3px);
+  }
+}
+
+/* Prevent content overflow in cards */
+.note-card * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Loading state for dropdowns during positioning */
+.priority-dropdown.positioning {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+  .priority-dropdown {
+    border: 2px solid currentColor;
+  }
+  
+  .priority-dropdown button {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  }
+  
+  .priority-dropdown button:hover,
+  .priority-dropdown button:focus {
+    border-bottom-color: transparent;
+  }
+}
+
+/* Reduce motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .priority-dropdown {
+    transition: none;
+  }
+  
+  .priority-dropdown.open {
+    animation: none;
+  }
+  
+  @keyframes dropdownSlideDown,
+  @keyframes dropdownSlideUp,
+  @keyframes dropdownFadeIn {
+    from, to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* Error state styling */
+.priority-dropdown.error {
+  border-color: var(--error-600);
+  background: var(--error-100);
+}
+
+.priority-dropdown.error button {
+  color: var(--error-600);
+}
+
+/* Loading skeleton for dropdown content */
+.priority-dropdown.loading {
+  min-height: 120px;
+  background: linear-gradient(90deg, 
+    var(--primary-200) 25%, 
+    var(--primary-100) 50%, 
+    var(--primary-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Focus trap styling */
+.priority-dropdown[aria-modal="true"] {
+  isolation: isolate;
+}
+
+/* Ensure interactive elements don't overlap */
+.note-card {
+  isolation: isolate; /* Creates new stacking context */
+  overflow: hidden; /* Prevent any content from breaking out */
+  position: relative;
+}
+
+/* Fix for content overflow issues - allow todo labels to show full text */
+.note-card .card-title,
+.note-card .card-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-card .todo-label {
+  overflow: visible; /* Allow full todo text to display */
+  text-overflow: clip;
+}
+
+/* Ensure proper spacing between interactive elements */
+.mode-toggle + .card-title {
+  margin-top: 0.5rem;
+}
+
+.mode-toggle + .todo-controls {
+  margin-top: 0.5rem;
+}
+
+/* Additional mobile safety */
+@media (max-width: 480px) {
+  .note-card {
+    padding: 0.5rem;
+    padding-top: 2.75rem;
+    min-height: 95px; /* Optimized for very small screens */
+  }
+  
+  .note-card.todo {
+    padding-bottom: 1.5rem; /* Minimal bottom padding for compact layout */
+  }
+  
+  .mode-toggle {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+  }
+  
+  .mode-toggle .mode-text {
+    display: none; /* Show only icon on very small screens */
+  }
+  
+  .card-title {
+    font-size: 1rem;
+  }
+  
+  .card-content {
+    font-size: 0.9rem;
+  }
+  
+  .priority-tag {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.35rem;
+  }
+  
+  /* Ultra-small screen dropdown adjustments */
+  .priority-dropdown {
+    max-width: calc(100vw - 0.5rem) !important;
+    min-width: 120px !important;
+  }
+  
+  .priority-dropdown button {
+    padding: 0.6rem 0.8rem;
+    font-size: max(16px, 0.85rem);
+  }
+  
+  /* Ensure dropdown is always visible on tiny screens */
+  .priority-dropdown.position-center-overlay {
+    top: 20% !important;
+    max-height: 60vh !important;
+  }
+}
+
+/* Focus states for accessibility */
+.mode-toggle:focus-visible,
+.priority-tag:focus-visible,
+.checkbox-todo:focus-visible {
+  outline: 2px solid var(--glass-primary);
+  outline-offset: 2px;
+}
+
+.priority-dropdown button:focus {
+  background-color: var(--glass-primary);
+  color: var(--glass-primary-foreground);
+  outline: none;
+}
+
+/* Skip link for dropdown navigation */
+.priority-dropdown::before {
+  content: 'Use arrow keys to navigate options';
+  position: absolute;
+  top: -2rem;
+  left: 0.5rem;
+  background: var(--glass-background);
+  color: var(--glass-foreground);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  border: 1px solid var(--glass-border);
+}
+
+.priority-dropdown:focus-within::before {
+  opacity: 1;
+}
+
+/* Screen reader only instructions */
+.priority-dropdown[role="listbox"]::after {
+  content: 'Priority selection menu. Use arrow keys to navigate and Enter to select.';
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
