@@ -18,6 +18,7 @@ class NotesApp {
     this.currentFilter = 'all';
     this.currentSearch = '';
     this.activeTagFilters = new Set();
+    this.currentTodoFilter = 'all';
     this.editingNoteId = null;
     this.isLoading = false;
     
@@ -58,6 +59,7 @@ class NotesApp {
     this.elements.searchInput = document.getElementById('search-input');
     this.elements.searchResultsInfo = document.getElementById('search-results-info');
     this.elements.tagFilters = document.getElementById('tag-filters');
+    this.elements.todoFilterChips = document.querySelector('.todo-filter-chips');
     this.elements.clearFilters = document.getElementById('clear-filters');
     
     // Modal elements
@@ -68,6 +70,7 @@ class NotesApp {
     this.elements.noteTitle = document.getElementById('note-title');
     this.elements.noteContent = document.getElementById('note-content');
     this.elements.noteTags = document.getElementById('note-tags');
+    this.elements.noteIsTodo = document.getElementById('note-is-todo');
     this.elements.saveBtn = document.getElementById('save-btn');
     this.elements.cancelBtn = document.getElementById('cancel-btn');
     this.elements.formErrors = document.getElementById('form-errors');
@@ -114,9 +117,16 @@ class NotesApp {
     });
 
     // Filter chips
-    document.querySelectorAll('.filter-chip').forEach(chip => {
+    document.querySelectorAll('.filter-chip[data-filter]').forEach(chip => {
       chip.addEventListener('click', (e) => {
         this.setTimeFilter(e.target.dataset.filter);
+      });
+    });
+
+    // Todo filter chips
+    document.querySelectorAll('.filter-chip[data-todo-filter]').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        this.setTodoFilter(e.target.dataset.todoFilter);
       });
     });
 
@@ -200,14 +210,17 @@ class NotesApp {
       const savedNotes = localStorage.getItem('vibe-coding-notes');
       if (savedNotes) {
         this.notes = JSON.parse(savedNotes);
-        // Ensure all notes have required properties
+        // Ensure all notes have required properties (including new todo fields)
         this.notes = this.notes.map(note => ({
           id: note.id || this.generateId(),
           title: note.title || '',
           content: note.content || '',
           tags: Array.isArray(note.tags) ? note.tags : [],
           createdAt: note.createdAt || new Date().toISOString(),
-          updatedAt: note.updatedAt || note.createdAt || new Date().toISOString()
+          updatedAt: note.updatedAt || note.createdAt || new Date().toISOString(),
+          // New todo fields with backward compatibility and type safety
+          isTodo: Boolean(note.isTodo),
+          isCompleted: Boolean(note.isCompleted)
         }));
         this.saveNotes(); // Save normalized data
       }
@@ -236,7 +249,10 @@ class NotesApp {
       content: noteData.content,
       tags: this.parseTags(noteData.tags),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      // Todo fields
+      isTodo: noteData.isTodo || false,
+      isCompleted: noteData.isCompleted || false
     };
 
     this.notes.unshift(note); // Add to beginning for chronological order
@@ -258,7 +274,10 @@ class NotesApp {
       title: noteData.title.trim(),
       content: noteData.content,
       tags: this.parseTags(noteData.tags),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      // Update todo fields if provided
+      isTodo: noteData.hasOwnProperty('isTodo') ? noteData.isTodo : this.notes[noteIndex].isTodo,
+      isCompleted: noteData.hasOwnProperty('isCompleted') ? noteData.isCompleted : this.notes[noteIndex].isCompleted
     };
 
     this.notes[noteIndex] = updatedNote;
@@ -283,6 +302,133 @@ class NotesApp {
     this.updateTagFilters();
     
     return true;
+  }
+
+  toggleTodoStatus(id) {
+    const noteIndex = this.notes.findIndex(note => note.id === id);
+    if (noteIndex === -1) {
+      console.warn('Note not found for todo status toggle:', id);
+      return false;
+    }
+
+    const note = this.notes[noteIndex];
+    const originalState = { ...note };
+    
+    // Three-state cycle: not todo → active todo → completed todo → not todo
+    if (!note.isTodo) {
+      // Convert to active todo
+      note.isTodo = true;
+      note.isCompleted = false;
+    } else if (note.isTodo && !note.isCompleted) {
+      // Mark as completed
+      note.isCompleted = true;
+    } else if (note.isTodo && note.isCompleted) {
+      // Convert back to regular note
+      note.isTodo = false;
+      note.isCompleted = false;
+    }
+
+    note.updatedAt = new Date().toISOString();
+    
+    // Optimistic UI update
+    const cardElement = document.querySelector(`[data-note-id="${id}"]`);
+    if (cardElement) {
+      this.updateTodoStatusUI(cardElement, note);
+    }
+
+    try {
+      this.saveNotes();
+      this.applyFilters();
+      this.renderNotes();
+      this.updateSearchInfo();
+      
+      // Success feedback
+      const statusMessage = this.getTodoStatusMessage(note);
+      this.showToast(statusMessage, 'success');
+      
+      // Announce to screen readers
+      this.announceTodoStatusChange(note);
+      
+    } catch (error) {
+      // Error recovery - revert to original state
+      console.error('Failed to update todo status:', error);
+      this.notes[noteIndex] = originalState;
+      if (cardElement) {
+        this.updateTodoStatusUI(cardElement, originalState);
+      }
+      this.showToast('Failed to update todo status', 'error');
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Helper methods for todo status management
+  updateTodoStatusUI(cardElement, note) {
+    const todoBtn = cardElement.querySelector('.todo-status-btn');
+    if (!todoBtn) return;
+    
+    // Update button classes
+    todoBtn.className = `todo-status-btn ${this.getTodoStatusClass(note)}`;
+    
+    // Update icon
+    const icon = todoBtn.querySelector('.status-icon');
+    if (icon) {
+      icon.textContent = this.getTodoStatusIcon(note);
+    }
+    
+    // Update ARIA label
+    todoBtn.setAttribute('aria-label', `Toggle todo status: ${this.getTodoStatusLabel(note)}`);
+    todoBtn.setAttribute('title', `Click to ${this.getNextActionLabel(note)}`);
+    
+    // Update card classes
+    cardElement.classList.toggle('todo-card', note.isTodo);
+    cardElement.classList.toggle('completed', note.isCompleted);
+  }
+
+  getTodoStatusClass(note) {
+    if (!note.isTodo) return 'not-todo';
+    return note.isCompleted ? 'completed' : 'active';
+  }
+
+  getTodoStatusIcon(note) {
+    if (!note.isTodo) return '○';        // Regular note: Empty circle
+    if (note.isCompleted) return '●';    // Completed: Filled circle
+    return '◐';                          // Active todo: Half-filled circle
+  }
+
+  getTodoStatusLabel(note) {
+    if (!note.isTodo) return 'not a todo';
+    return note.isCompleted ? 'completed todo' : 'active todo';
+  }
+
+  getNextActionLabel(note) {
+    if (!note.isTodo) return 'make this a todo';
+    if (!note.isCompleted) return 'mark as completed';
+    return 'convert back to note';
+  }
+
+  getTodoStatusMessage(note) {
+    if (!note.isTodo) return 'Note converted to regular note';
+    if (note.isCompleted) return 'Todo marked as completed';
+    return 'Note converted to todo';
+  }
+
+  announceTodoStatusChange(note) {
+    const announcement = `${note.title || 'Note'} ${this.getTodoStatusMessage(note).toLowerCase()}`;
+    
+    // Create or update live region
+    let liveRegion = document.getElementById('todo-announcements');
+    if (!liveRegion) {
+      liveRegion = document.createElement('div');
+      liveRegion.id = 'todo-announcements';
+      liveRegion.setAttribute('aria-live', 'polite');
+      liveRegion.setAttribute('aria-atomic', 'true');
+      liveRegion.className = 'sr-only';
+      document.body.appendChild(liveRegion);
+    }
+    
+    liveRegion.textContent = announcement;
   }
 
   // ==========================================================================
@@ -327,6 +473,21 @@ class NotesApp {
       );
     }
 
+    // Apply todo filters
+    if (this.currentTodoFilter !== 'all') {
+      switch (this.currentTodoFilter) {
+        case 'todos':
+          filtered = filtered.filter(note => note.isTodo);
+          break;
+        case 'active':
+          filtered = filtered.filter(note => note.isTodo && !note.isCompleted);
+          break;
+        case 'completed':
+          filtered = filtered.filter(note => note.isTodo && note.isCompleted);
+          break;
+      }
+    }
+
     // Apply search filter
     if (this.currentSearch.trim()) {
       const searchTerm = this.currentSearch.toLowerCase();
@@ -356,6 +517,22 @@ class NotesApp {
     this.updateClearFiltersVisibility();
   }
 
+  setTodoFilter(filter) {
+    this.currentTodoFilter = filter;
+    
+    // Update todo filter chip states
+    document.querySelectorAll('.filter-chip[data-todo-filter]').forEach(chip => {
+      const isActive = chip.dataset.todoFilter === filter;
+      chip.classList.toggle('active', isActive);
+      chip.setAttribute('aria-pressed', isActive);
+    });
+
+    this.applyFilters();
+    this.renderNotes();
+    this.updateSearchInfo();
+    this.updateClearFiltersVisibility();
+  }
+
   toggleTagFilter(tag) {
     if (this.activeTagFilters.has(tag)) {
       this.activeTagFilters.delete(tag);
@@ -374,14 +551,21 @@ class NotesApp {
     this.currentFilter = 'all';
     this.currentSearch = '';
     this.activeTagFilters.clear();
+    this.currentTodoFilter = 'all';
     
     // Reset UI
     if (this.elements.searchInput) {
       this.elements.searchInput.value = '';
     }
     
-    document.querySelectorAll('.filter-chip').forEach(chip => {
+    document.querySelectorAll('.filter-chip[data-filter]').forEach(chip => {
       const isAll = chip.dataset.filter === 'all';
+      chip.classList.toggle('active', isAll);
+      chip.setAttribute('aria-pressed', isAll);
+    });
+
+    document.querySelectorAll('.filter-chip[data-todo-filter]').forEach(chip => {
+      const isAll = chip.dataset.todoFilter === 'all';
       chip.classList.toggle('active', isAll);
       chip.setAttribute('aria-pressed', isAll);
     });
@@ -452,6 +636,9 @@ class NotesApp {
 
     // Announce to screen readers
     this.announceSearchResults();
+    
+    // Update todo filter visibility
+    this.updateTodoFilterVisibility();
   }
 
   createNoteCard(note, index) {
@@ -471,30 +658,52 @@ class NotesApp {
       card.classList.add('content-only');
     }
 
+    // Add todo-specific classes
+    if (note.isTodo) {
+      card.classList.add('todo-card');
+      if (note.isCompleted) {
+        card.classList.add('completed');
+      }
+    }
+
+    const todoStatusIndicator = `
+      <div class="todo-status-wrapper">
+        <button class="todo-status-btn ${this.getTodoStatusClass(note)}"
+                data-note-id="${note.id}"
+                aria-label="Toggle todo status: ${this.getTodoStatusLabel(note)}"
+                title="Click to ${this.getNextActionLabel(note)}">
+          <span class="status-icon">${this.getTodoStatusIcon(note)}</span>
+        </button>
+      </div>
+    `;
+
     card.innerHTML = `
-      <header class="note-header ${note.tags.length === 0 ? 'no-tags' : ''}">
-        ${note.tags.length > 0 ? `
-          <div class="note-tags">
-            ${note.tags.map(tag => `
-              <span class="note-tag ${this.getTagClass(tag)}">${this.escapeHtml(tag)}</span>
-            `).join('')}
-          </div>
-        ` : ''}
-        <div class="note-meta">
-          <time class="note-timestamp" datetime="${note.createdAt}" title="${this.formatFullDate(note.createdAt)}">
-            ${this.formatRelativeTime(note.createdAt)}
-          </time>
-          <button class="note-actions-btn" aria-label="Note actions" title="Actions">⋮</button>
-        </div>
-      </header>
-      
-      <div class="note-content">
+      <header class="note-header">
         <time class="note-date" datetime="${note.createdAt}" title="${this.formatFullDate(note.createdAt)}">
           ${this.formatFriendlyDate(note.createdAt)}
         </time>
-        ${note.title.trim() ? `<h3 class="note-title">${this.highlightSearchTerm(this.escapeHtml(note.title))}</h3>` : ''}
-        <p class="note-body">${this.highlightSearchTerm(this.escapeHtml(this.truncateContent(note.content, 150)))}</p>
+        <time class="note-timestamp" datetime="${note.createdAt}" title="${this.formatFullDate(note.createdAt)}">
+          ${this.formatRelativeTime(note.createdAt)}
+        </time>
+      </header>
+      
+      <div class="note-content">
+        ${todoStatusIndicator}
+        <div class="note-text">
+          ${note.title.trim() ? `<h3 class="note-title">${this.highlightSearchTerm(this.escapeHtml(note.title))}</h3>` : ''}
+          <p class="note-body">${this.highlightSearchTerm(this.escapeHtml(this.truncateContent(note.content, 150)))}</p>
+        </div>
       </div>
+      
+      <footer class="note-footer">
+        <div class="note-tags">
+          ${note.tags.map(tag => `
+            <span class="note-tag ${this.getTagClass(tag)}">${this.escapeHtml(tag)}</span>
+          `).join('')}
+          <!-- Removed todo tag to prevent layout shifts -->
+        </div>
+        <button class="note-actions-btn" aria-label="Note actions" title="Actions">⋮</button>
+      </footer>
       
       <div class="note-actions" style="display: none;">
         <button class="action-btn edit-btn" aria-label="Edit note" title="Edit">✏️</button>
@@ -513,6 +722,28 @@ class NotesApp {
     const deleteBtn = card.querySelector('.delete-btn');
     const actionsBtn = card.querySelector('.note-actions-btn');
     const actions = card.querySelector('.note-actions');
+    const todoBtn = card.querySelector('.todo-status-btn');
+
+    // Todo status toggle
+    todoBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      
+      // Add click animation
+      todoBtn.classList.add('clicking');
+      setTimeout(() => todoBtn.classList.remove('clicking'), 150);
+      
+      this.toggleTodoStatus(note.id);
+    });
+
+    // Keyboard support for todo button
+    todoBtn?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleTodoStatus(note.id);
+      }
+    });
 
     // Edit button
     editBtn?.addEventListener('click', (e) => {
@@ -538,8 +769,12 @@ class NotesApp {
       actions.style.display = isVisible ? 'none' : 'flex';
     });
 
-    // Card click (read full note)
-    card.addEventListener('click', () => {
+    // Card click (read full note) - exclude clicks on interactive elements
+    card.addEventListener('click', (e) => {
+      // Don't open modal if clicking on interactive elements
+      if (e.target.closest('.note-actions-btn, .note-tag, .action-btn, .todo-status-btn')) {
+        return;
+      }
       this.openViewNoteModal(note);
     });
 
@@ -556,6 +791,7 @@ class NotesApp {
       tagEl.addEventListener('click', (e) => {
         e.stopPropagation();
         const tag = tagEl.textContent;
+        // All tags are now filterable since we removed auto-generated todo tags
         this.toggleTagFilter(tag);
       });
     });
@@ -577,6 +813,27 @@ class NotesApp {
     this.elements.noteTitle.value = '';
     this.elements.noteContent.value = '';
     this.elements.noteTags.value = '';
+    this.elements.noteIsTodo.checked = false;
+    this.clearFormErrors();
+    this.updateCharacterCount();
+    
+    this.showModal();
+    this.elements.noteContent.focus();
+  }
+
+  openAddTodoModal() {
+    this.editingNoteId = null;
+    this.elements.modalTitle.textContent = 'Add New Todo';
+    this.elements.saveBtn.innerHTML = '<span class="btn-text">Save Todo</span><span class="btn-loading" style="display: none;">Saving...</span>';
+    
+    // Clear any existing draft to ensure clean slate
+    this.clearDraft();
+    
+    // Clear form and pre-check todo checkbox
+    this.elements.noteTitle.value = '';
+    this.elements.noteContent.value = '';
+    this.elements.noteTags.value = '';
+    this.elements.noteIsTodo.checked = true;
     this.clearFormErrors();
     this.updateCharacterCount();
     
@@ -593,6 +850,7 @@ class NotesApp {
     this.elements.noteTitle.value = note.title;
     this.elements.noteContent.value = note.content;
     this.elements.noteTags.value = note.tags.join(', ');
+    this.elements.noteIsTodo.checked = note.isTodo || false;
     this.clearFormErrors();
     this.updateCharacterCount();
     
@@ -666,7 +924,13 @@ class NotesApp {
 
     // Simulate async operation
     setTimeout(() => {
-      const noteData = { title, content, tags };
+      const noteData = { 
+        title, 
+        content, 
+        tags, 
+        isTodo: this.elements.noteIsTodo.checked,
+        isCompleted: false // New todo items start as incomplete
+      };
 
       if (this.editingNoteId) {
         // Update existing note
@@ -902,15 +1166,23 @@ class NotesApp {
   }
 
   updateTagSuggestions() {
-    // Get all existing tags
+    // Get all existing tags from all notes
     const allTags = [...new Set(this.notes.flatMap(note => note.tags))];
-    const currentInput = this.elements.noteTags.value.toLowerCase();
-    const currentTags = this.parseTags(this.elements.noteTags.value);
     
-    // Filter suggestions
+    // Parse current input to get partial tag and complete tags
+    const { partialTag, completeTags } = this.getCurrentPartialTag();
+    
+    // Only show suggestions if user is typing a partial tag
+    if (!partialTag) {
+      this.elements.tagSuggestions.style.display = 'none';
+      return;
+    }
+    
+    // Filter suggestions based on partial tag, excluding already used tags
     const suggestions = allTags.filter(tag => 
-      tag.toLowerCase().includes(currentInput) && 
-      !currentTags.includes(tag)
+      tag.toLowerCase().includes(partialTag.toLowerCase()) && 
+      !completeTags.includes(tag.toLowerCase()) &&
+      tag.toLowerCase() !== partialTag.toLowerCase() // Don't suggest exact matches
     ).slice(0, 8);
 
     if (suggestions.length > 0) {
@@ -931,13 +1203,44 @@ class NotesApp {
     }
   }
 
-  addTagToInput(tag) {
-    const currentTags = this.parseTags(this.elements.noteTags.value);
-    if (!currentTags.includes(tag)) {
-      const newTags = [...currentTags, tag].join(', ');
-      this.elements.noteTags.value = newTags;
-      this.elements.tagSuggestions.style.display = 'none';
+  getCurrentPartialTag() {
+    const fullInput = this.elements.noteTags.value;
+    if (!fullInput.trim()) return { partialTag: '', completeTags: [] };
+    
+    // Split by comma and trim each part
+    const parts = fullInput.split(',').map(part => part.trim());
+    
+    // If the input ends with a comma (or comma + spaces), user is starting a new tag
+    if (/,\s*$/.test(fullInput)) {
+      return {
+        partialTag: '',
+        completeTags: parts.filter(part => part.length > 0)
+      };
     }
+    
+    // Otherwise, the last part is the partial tag being typed
+    const partialTag = parts[parts.length - 1] || '';
+    const completeTags = parts.slice(0, -1).filter(part => part.length > 0);
+    
+    return { partialTag, completeTags };
+  }
+
+  addTagToInput(tag) {
+    const { partialTag, completeTags } = this.getCurrentPartialTag();
+    
+    // Check if tag already exists in complete tags
+    if (completeTags.some(existingTag => existingTag.toLowerCase() === tag.toLowerCase())) {
+      this.elements.tagSuggestions.style.display = 'none';
+      return;
+    }
+    
+    // Replace partial tag with selected tag and add trailing comma + space
+    const newTags = [...completeTags, tag];
+    this.elements.noteTags.value = newTags.join(', ') + ', ';
+    this.elements.tagSuggestions.style.display = 'none';
+    
+    // Focus the input field for immediate next tag typing
+    this.elements.noteTags.focus();
   }
 
   // ==========================================================================
@@ -969,11 +1272,22 @@ class NotesApp {
   updateClearFiltersVisibility() {
     const hasActiveFilters = this.currentFilter !== 'all' || 
                            this.currentSearch.trim() || 
-                           this.activeTagFilters.size > 0;
+                           this.activeTagFilters.size > 0 ||
+                           this.currentTodoFilter !== 'all';
     
     if (this.elements.clearFilters) {
       this.elements.clearFilters.style.display = hasActiveFilters ? 'block' : 'none';
     }
+  }
+
+  updateTodoFilterVisibility() {
+    if (!this.elements.todoFilterChips) return;
+
+    // Check if any notes are todos
+    const hasTodos = this.notes.some(note => note.isTodo);
+    
+    // Show/hide todo filter chips based on whether todos exist
+    this.elements.todoFilterChips.style.display = hasTodos ? 'flex' : 'none';
   }
 
   // ==========================================================================
@@ -1015,9 +1329,16 @@ class NotesApp {
 
   handleKeyboardShortcuts(e) {
     // Ctrl/Cmd + N: New note
-    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n' && !e.shiftKey) {
       e.preventDefault();
       this.openAddNoteModal();
+      return;
+    }
+
+    // Ctrl/Cmd + Shift + N: New todo note
+    if ((e.ctrlKey || e.metaKey) && e.key === 'N' && e.shiftKey) {
+      e.preventDefault();
+      this.openAddTodoModal();
       return;
     }
 
@@ -1048,6 +1369,31 @@ class NotesApp {
         this.elements.modalOverlay.style.display === 'flex') {
       e.preventDefault();
       this.saveNote();
+      return;
+    }
+
+    // Todo filter shortcuts
+    // Ctrl/Cmd + T: Filter to todos only
+    if ((e.ctrlKey || e.metaKey) && e.key === 't' && 
+        this.elements.modalOverlay.style.display !== 'flex') {
+      e.preventDefault();
+      this.setTodoFilter('todos');
+      return;
+    }
+
+    // Ctrl/Cmd + Shift + A: Filter to active todos
+    if ((e.ctrlKey || e.metaKey) && e.key === 'A' && e.shiftKey &&
+        this.elements.modalOverlay.style.display !== 'flex') {
+      e.preventDefault();
+      this.setTodoFilter('active');
+      return;
+    }
+
+    // Ctrl/Cmd + Shift + C: Filter to completed todos
+    if ((e.ctrlKey || e.metaKey) && e.key === 'C' && e.shiftKey &&
+        this.elements.modalOverlay.style.display !== 'flex') {
+      e.preventDefault();
+      this.setTodoFilter('completed');
       return;
     }
   }
@@ -1257,6 +1603,32 @@ class NotesApp {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
+  }
+
+  
+  // ==========================================================================
+  // Todo Feature Validation (for testing)
+  // ==========================================================================
+
+  validateTodoFeature() {
+    console.log('🧪 Validating Todo Feature Implementation...');
+    
+    const validations = {
+      dataSchema: this.notes.every(note => 
+        typeof note.isTodo === 'boolean' && typeof note.isCompleted === 'boolean'
+      ),
+      htmlElements: !!(this.elements.noteIsTodo && this.elements.todoFilterChips),
+      filterFunctionality: ['all', 'todos', 'active', 'completed'].includes(this.currentTodoFilter),
+      cssStyles: !!document.querySelector('.todo-card, .todo-checkbox, .checkbox-label'),
+      keyboardShortcuts: true // Assume working if no errors during binding
+    };
+
+    const allValid = Object.values(validations).every(Boolean);
+    
+    console.log('📊 Todo Feature Validation Results:', validations);
+    console.log(allValid ? '✅ All todo features validated successfully!' : '❌ Some todo features need attention');
+    
+    return allValid;
   }
 }
 

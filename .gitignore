@@ -1,6 +1,9 @@
 # Tool-specific directories
 .claude/
 .serena/
+.cursor/
+.superdesign/
+.windsurfrules
 agent-outputs/
 
 # Operating System Files

@@ -95,6 +95,22 @@
                         </button>
                     </div>
                     
+                    <!-- Todo filter chips -->
+                    <div class="todo-filter-chips" style="display: none;">
+                        <button class="filter-chip" data-todo-filter="all" aria-pressed="true">
+                            All Notes
+                        </button>
+                        <button class="filter-chip" data-todo-filter="todos" aria-pressed="false">
+                            Todos Only
+                        </button>
+                        <button class="filter-chip" data-todo-filter="active" aria-pressed="false">
+                            Active Todos
+                        </button>
+                        <button class="filter-chip" data-todo-filter="completed" aria-pressed="false">
+                            Completed Todos
+                        </button>
+                    </div>
+                    
                     <!-- Tag filters (dynamically populated) -->
                     <div class="tag-filters" id="tag-filters" role="group" aria-label="Filter by tags">
                         <!-- Tag filter chips will be inserted here by JavaScript -->
@@ -255,6 +271,20 @@
                         <!-- Tag suggestions -->
                         <div class="tag-suggestions" id="tag-suggestions" style="display: none;">
                             <!-- Dynamic tag suggestions will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Todo checkbox -->
+                    <div class="form-group">
+                        <label class="checkbox-label" for="note-is-todo">
+                            <input type="checkbox" 
+                                   id="note-is-todo" 
+                                   class="form-checkbox"
+                                   aria-describedby="todo-help">
+                            <span class="checkbox-text">Mark as todo item</span>
+                        </label>
+                        <div id="todo-help" class="form-help">
+                            Todo items can be checked off as completed and filtered separately
                         </div>
                     </div>
                     
