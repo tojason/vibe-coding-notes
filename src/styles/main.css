@@ -447,10 +447,20 @@ pre {
   gap: var(--space-3);
 }
 
-.filter-chips {
+.filter-chips,
+.todo-filter-chips {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+}
+
+/* Improved spacing for cleaner navigation */
+.todo-filter-chips {
+  margin-bottom: var(--space-2);
+}
+
+.tag-filters {
+  margin-top: var(--space-1);
 }
 
 .filter-chip {
@@ -482,6 +492,14 @@ pre {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--primary-200);
+}
+
+/* Only show border when tag filters are present */
+.tag-filters:empty {
+  border-top: none;
+  padding-top: 0;
 }
 
 .clear-filters {
@@ -1526,12 +1544,19 @@ pre {
     padding: var(--space-8) var(--space-6);
   }
 
+  /* Notes Grid - Enable 2-column layout at tablet size */
   .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: var(--space-5);
+    justify-items: center;
+    align-items: start;
   }
 
   /* Add Note Card */
   .add-note-card {
+    grid-column: 1 / -1;
+    margin-bottom: var(--space-4);
     min-height: 160px;
     padding: var(--space-8);
   }
@@ -1579,17 +1604,23 @@ pre {
    ========================================================================== */
 
 @media (min-width: 1024px) {
-  /* Notes Grid - Multi-column Layout */
+  /* Desktop enhancements - increase gap and minimum card width */
   .notes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: var(--space-6);
+    justify-items: center;
+    align-items: start;
   }
 
-  /* Add Note Card - Grid Item */
   .add-note-card {
     grid-column: 1 / -1;
-    margin-bottom: var(--space-4);
+    max-width: 500px;
+  }
+  
+  /* Ensure consistent card sizing */
+  .note-card {
+    width: 100%;
+    max-width: 380px;
   }
 
   /* Note Cards - Masonry Effect */
@@ -2351,20 +2382,21 @@ pre {
 /* Redesigned Priority Tag - Better Positioning and Accessibility */
 .priority-tag {
   position: absolute;
-  bottom: 0.5rem; /* Reduced from 0.75rem for tighter layout */
+  bottom: 0.5rem;
   right: 0.75rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.3rem 0.6rem;
-  border-radius: 12px; /* Slightly less rounded for modern look */
-  font-weight: 700;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 600;
   cursor: pointer;
   user-select: none;
-  color: var(--glass-primary-foreground);
-  transition: all 0.2s ease;
-  font-size: 0.75rem;
-  border: 2px solid transparent; /* Thicker border for better definition */
+  color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   z-index: 12;
   max-width: calc(100% - 1.5rem);
   overflow: hidden;
@@ -2375,41 +2407,61 @@ pre {
   min-width: 44px;
   min-height: 32px;
   
-  /* Better visual hierarchy */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  /* Modern glass effect */
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.priority-tag::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
 }
 
 .priority-tag:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .priority-tag:focus {
-  outline: 2px solid var(--glass-primary);
+  outline: 2px solid rgba(255, 255, 255, 0.6);
   outline-offset: 2px;
+  transform: scale(1.02);
+}
+
+.priority-tag:active {
+  transform: translateY(-1px) scale(0.98);
+  transition: all 0.1s ease;
 }
 
 .priority-urgent-important {
-  background-color: #ef4444;
-  border-color: #b91c1c;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25), 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .priority-not-urgent-important {
-  background-color: #fbbf24;
-  color: #1f2937;
-  border-color: #a16207;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.25), 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .priority-urgent-not-important {
-  background-color: #60a5fa;
-  border-color: #2563eb;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25), 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .priority-not-urgent-not-important {
-  background-color: #6b7280;
-  border-color: #374151;
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  border-color: rgba(107, 114, 128, 0.3);
+  box-shadow: 0 4px 16px rgba(107, 114, 128, 0.25), 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 /* Priority Dropdown - Smart Positioning System */
@@ -2879,27 +2931,6 @@ pre {
   }
 }
 
-/* Grid Layout Updates for Unified Cards */
-@media (min-width: 1024px) {
-  .notes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: var(--space-6);
-    justify-items: center;
-    align-items: start; /* Prevent cards from stretching */
-  }
-  
-  .add-note-card {
-    grid-column: 1 / -1;
-    max-width: 500px;
-  }
-  
-  /* Ensure consistent card sizing */
-  .note-card {
-    width: 100%;
-    max-width: 380px;
-  }
-}
 
 /* Animation for mode switching */
 @keyframes modeSwitch {

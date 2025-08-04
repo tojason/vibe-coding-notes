@@ -328,7 +328,6 @@ class NotesApp {
   constructor() {
     this.notes = [];
     this.filteredNotes = [];
-    this.currentFilter = 'all';
     this.currentSearch = '';
     this.activeTagFilters = new Set();
     this.currentTodoFilter = 'all';
@@ -432,12 +431,7 @@ class NotesApp {
       this.debouncedSearch();
     });
 
-    // Filter chips
-    document.querySelectorAll('.filter-chip[data-filter]').forEach(chip => {
-      chip.addEventListener('click', (e) => {
-        this.setTimeFilter(e.target.dataset.filter);
-      });
-    });
+    // Time filter functionality removed for cleaner UI
 
     // Todo filter chips
     document.querySelectorAll('.filter-chip[data-todo-filter]').forEach(chip => {
@@ -791,28 +785,6 @@ class NotesApp {
   applyFilters() {
     let filtered = [...this.notes];
 
-    // Apply time filter
-    if (this.currentFilter !== 'all') {
-      const now = new Date();
-      const filterDate = new Date();
-
-      switch (this.currentFilter) {
-        case 'today':
-          filterDate.setHours(0, 0, 0, 0);
-          break;
-        case 'week':
-          filterDate.setDate(now.getDate() - 7);
-          break;
-        case 'month':
-          filterDate.setMonth(now.getMonth() - 1);
-          break;
-      }
-
-      if (this.currentFilter !== 'all') {
-        filtered = filtered.filter(note => new Date(note.createdAt) >= filterDate);
-      }
-    }
-
     // Apply tag filters
     if (this.activeTagFilters.size > 0) {
       filtered = filtered.filter(note => 
@@ -848,20 +820,9 @@ class NotesApp {
     this.filteredNotes = filtered;
   }
 
+  // Time filter functionality removed - method kept as stub for compatibility
   setTimeFilter(filter) {
-    this.currentFilter = filter;
-    
-    // Update filter chip states
-    document.querySelectorAll('.filter-chip').forEach(chip => {
-      const isActive = chip.dataset.filter === filter;
-      chip.classList.toggle('active', isActive);
-      chip.setAttribute('aria-pressed', isActive);
-    });
-
-    this.applyFilters();
-    this.renderNotes();
-    this.updateSearchInfo();
-    this.updateClearFiltersVisibility();
+    // No longer used - time filters removed from UI
   }
 
   setTodoFilter(filter) {
@@ -895,7 +856,6 @@ class NotesApp {
   }
 
   clearAllFilters() {
-    this.currentFilter = 'all';
     this.currentSearch = '';
     this.activeTagFilters.clear();
     this.currentTodoFilter = 'all';
@@ -903,13 +863,7 @@ class NotesApp {
     // Reset UI
     if (this.elements.searchInput) {
       this.elements.searchInput.value = '';
-    }
-    
-    document.querySelectorAll('.filter-chip[data-filter]').forEach(chip => {
-      const isAll = chip.dataset.filter === 'all';
-      chip.classList.toggle('active', isAll);
-      chip.setAttribute('aria-pressed', isAll);
-    });
+    };
 
     document.querySelectorAll('.filter-chip[data-todo-filter]').forEach(chip => {
       const isAll = chip.dataset.todoFilter === 'all';
@@ -966,7 +920,7 @@ class NotesApp {
     
     if (this.elements.noResultsState) {
       this.elements.noResultsState.style.display = 
-        hasNotes && !hasFilteredResults && (this.currentSearch || this.currentFilter !== 'all' || this.activeTagFilters.size > 0) 
+        hasNotes && !hasFilteredResults && (this.currentSearch || this.activeTagFilters.size > 0 || this.currentTodoFilter !== 'all') 
           ? 'block' : 'none';
     }
 
@@ -1005,12 +959,12 @@ class NotesApp {
       card.classList.add('todo');
     }
 
-    // Priority labels and classes
+    // Priority labels and classes with better visual indicators
     const priorities = [
-      { label: 'Urgent & Important', shortLabel: 'UI', className: 'priority-urgent-important' },
-      { label: 'Not Urgent but Important', shortLabel: 'NI', className: 'priority-not-urgent-important' },
-      { label: 'Urgent but Not Important', shortLabel: 'UN', className: 'priority-urgent-not-important' },
-      { label: 'Not Urgent & Not Important', shortLabel: 'NN', className: 'priority-not-urgent-not-important' }
+      { label: 'Urgent & Important', shortLabel: 'Critical', icon: '🔥', className: 'priority-urgent-important' },
+      { label: 'Not Urgent but Important', shortLabel: 'Important', icon: '⭐', className: 'priority-not-urgent-important' },
+      { label: 'Urgent but Not Important', shortLabel: 'Urgent', icon: '⚡', className: 'priority-urgent-not-important' },
+      { label: 'Not Urgent & Not Important', shortLabel: 'Low', icon: '📝', className: 'priority-not-urgent-not-important' }
     ];
     
     const currentPriority = priorities[note.priority || 0];
@@ -1048,6 +1002,7 @@ class NotesApp {
              aria-expanded="false" 
              title="Priority: ${currentPriority.label}"
              aria-label="Task priority: ${currentPriority.label}">
+          <span class="priority-icon">${currentPriority.icon}</span>
           ${currentPriority.shortLabel}
         </div>
         <div class="priority-dropdown position-bottom-right" 
@@ -1061,6 +1016,7 @@ class NotesApp {
                     data-priority="${index}"
                     data-note-id="${note.id}"
                     title="Set priority to ${priority.label}">
+              <span class="priority-icon">${priority.icon}</span>
               <span class="priority-color"></span> ${priority.label}
             </button>
           `).join('')}
@@ -1705,8 +1661,7 @@ class NotesApp {
   }
 
   updateClearFiltersVisibility() {
-    const hasActiveFilters = this.currentFilter !== 'all' || 
-                           this.currentSearch.trim() || 
+    const hasActiveFilters = this.currentSearch.trim() || 
                            this.activeTagFilters.size > 0 ||
                            this.currentTodoFilter !== 'all';
     
@@ -1739,7 +1694,7 @@ class NotesApp {
     
     if (total === 0) {
       message = 'No notes yet';
-    } else if (this.currentSearch.trim() || this.currentFilter !== 'all' || this.activeTagFilters.size > 0) {
+    } else if (this.currentSearch.trim() || this.activeTagFilters.size > 0 || this.currentTodoFilter !== 'all') {
       message = `Showing ${filtered} of ${total} notes`;
     } else {
       message = `${total} note${total === 1 ? '' : 's'}`;

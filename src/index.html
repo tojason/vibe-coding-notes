@@ -15,6 +15,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <!-- Styles -->
+    <link rel="stylesheet" href="styles/modern-redesign.css">
+    <link rel="stylesheet" href="styles/theme-contrast-fix.css">
     <link rel="stylesheet" href="styles/main.css">
     
     <!-- Progressive Web App meta -->
@@ -41,7 +43,7 @@
                 
                 <div class="header-actions">
                     <!-- Theme toggle -->
-                    <button class="theme-toggle" 
+                    <button class="btn btn-ghost btn-icon theme-toggle" 
                             id="theme-toggle" 
                             aria-label="Toggle dark mode"
                             title="Toggle dark/light theme">
@@ -49,7 +51,7 @@
                     </button>
                     
                     <!-- Export button -->
-                    <button class="export-btn" 
+                    <button class="btn btn-outline export-btn" 
                             id="export-btn" 
                             aria-label="Export notes"
                             title="Export all notes as JSON">
@@ -68,7 +70,7 @@
                     <label for="search-input" class="sr-only">Search notes</label>
                     <input type="text" 
                            id="search-input" 
-                           class="search-input"
+                           class="input search-input"
                            placeholder="Search notes, tags, or content..."
                            autocomplete="off"
                            aria-describedby="search-description">
@@ -80,33 +82,18 @@
                 
                 <!-- Filter controls -->
                 <div class="filter-controls" role="group" aria-label="Filter notes">
-                    <div class="filter-chips">
-                        <button class="filter-chip active" data-filter="all" aria-pressed="true">
-                            All Time
-                        </button>
-                        <button class="filter-chip" data-filter="today" aria-pressed="false">
-                            Today
-                        </button>
-                        <button class="filter-chip" data-filter="week" aria-pressed="false">
-                            This Week
-                        </button>
-                        <button class="filter-chip" data-filter="month" aria-pressed="false">
-                            This Month
-                        </button>
-                    </div>
-                    
                     <!-- Todo filter chips -->
-                    <div class="todo-filter-chips" style="display: none;">
-                        <button class="filter-chip" data-todo-filter="all" aria-pressed="true">
+                    <div class="todo-filter-chips">
+                        <button class="btn btn-ghost btn-sm filter-chip" data-todo-filter="all" aria-pressed="true">
                             All Notes
                         </button>
-                        <button class="filter-chip" data-todo-filter="todos" aria-pressed="false">
+                        <button class="btn btn-ghost btn-sm filter-chip" data-todo-filter="todos" aria-pressed="false">
                             Todos Only
                         </button>
-                        <button class="filter-chip" data-todo-filter="active" aria-pressed="false">
+                        <button class="btn btn-ghost btn-sm filter-chip" data-todo-filter="active" aria-pressed="false">
                             Active Todos
                         </button>
-                        <button class="filter-chip" data-todo-filter="completed" aria-pressed="false">
+                        <button class="btn btn-ghost btn-sm filter-chip" data-todo-filter="completed" aria-pressed="false">
                             Completed Todos
                         </button>
                     </div>
@@ -118,7 +105,7 @@
                 </div>
                 
                 <!-- Clear filters button -->
-                <button class="clear-filters" 
+                <button class="btn btn-secondary btn-sm clear-filters" 
                         id="clear-filters" 
                         style="display: none;"
                         aria-label="Clear all filters">
@@ -141,35 +128,37 @@
             <section class="notes-section" aria-label="Notes list">
                 <div class="notes-grid" id="notes-grid">
                     <!-- Add note card (first item in grid) -->
-                    <article class="add-note-card" id="add-note-card" tabindex="0" role="button" aria-label="Add new note">
-                        <div class="add-note-icon" aria-hidden="true">➕</div>
-                        <h2 class="add-note-text">Add New Note</h2>
-                        <p class="add-note-description">Capture your insights and ideas</p>
+                    <article class="card add-note-card" id="add-note-card" tabindex="0" role="button" aria-label="Add new note">
+                        <div class="card-content">
+                            <div class="add-note-icon" aria-hidden="true">➕</div>
+                            <h2 class="add-note-text">Add New Note</h2>
+                            <p class="add-note-description">Capture your insights and ideas</p>
+                        </div>
                     </article>
                     
                     <!-- Note cards will be dynamically inserted here -->
                     <!-- Example note card structure for reference: -->
                     <!--
-                    <article class="note-card" data-note-id="unique-id" tabindex="0">
-                        <header class="note-header">
+                    <article class="card note-card" data-note-id="unique-id" tabindex="0">
+                        <div class="card-header note-header">
                             <div class="note-tags">
-                                <span class="note-tag mcp-tool">MCP Tool</span>
-                                <span class="note-tag best-practice">Best Practice</span>
+                                <span class="badge badge-secondary note-tag mcp-tool">MCP Tool</span>
+                                <span class="badge badge-secondary note-tag best-practice">Best Practice</span>
                             </div>
                             <div class="note-meta">
                                 <time class="note-timestamp" datetime="2025-08-02T10:30:00">2 hours ago</time>
-                                <button class="note-actions-btn" aria-label="Note actions">⋮</button>
+                                <button class="btn btn-ghost btn-icon note-actions-btn" aria-label="Note actions">⋮</button>
                             </div>
-                        </header>
+                        </div>
                         
-                        <div class="note-content">
-                            <h3 class="note-title">Note Title Here</h3>
+                        <div class="card-content note-content">
+                            <h3 class="card-title note-title">Note Title Here</h3>
                             <p class="note-body">First few lines of note content appear here...</p>
                         </div>
                         
-                        <div class="note-actions" style="display: none;">
-                            <button class="action-btn edit-btn" aria-label="Edit note" title="Edit">✏️</button>
-                            <button class="action-btn delete-btn" aria-label="Delete note" title="Delete">🗑️</button>
+                        <div class="card-footer note-actions" style="display: none;">
+                            <button class="btn btn-ghost btn-sm action-btn edit-btn" aria-label="Edit note" title="Edit">✏️</button>
+                            <button class="btn btn-destructive btn-sm action-btn delete-btn" aria-label="Delete note" title="Delete">🗑️</button>
                         </div>
                     </article>
                     -->
@@ -182,7 +171,7 @@
                     <p class="empty-description">
                         Capture insights, track progress, and build your developer story
                     </p>
-                    <button class="empty-cta" id="empty-cta">Add Your First Note</button>
+                    <button class="btn btn-default empty-cta" id="empty-cta">Add Your First Note</button>
                 </div>
                 
                 <!-- No search results state -->
@@ -192,7 +181,7 @@
                     <p class="no-results-description">
                         Try adjusting your search terms or filters
                     </p>
-                    <button class="no-results-cta" id="clear-search">Clear Search</button>
+                    <button class="btn btn-secondary no-results-cta" id="clear-search">Clear Search</button>
                 </div>
             </section>
         </main>
@@ -209,7 +198,7 @@
         <div class="modal" role="dialog" aria-labelledby="modal-title" aria-describedby="modal-description">
             <header class="modal-header">
                 <h2 id="modal-title" class="modal-title">Add New Note</h2>
-                <button class="modal-close" 
+                <button class="btn btn-ghost btn-icon modal-close" 
                         id="modal-close" 
                         aria-label="Close modal"
                         title="Close (Esc)">
@@ -225,7 +214,7 @@
                         </label>
                         <input type="text" 
                                id="note-title" 
-                               class="form-input"
+                               class="input form-input"
                                placeholder="Auto-generated from content..."
                                maxlength="100"
                                aria-describedby="title-help">
@@ -239,7 +228,7 @@
                             Content
                         </label>
                         <textarea id="note-content" 
-                                  class="form-textarea"
+                                  class="textarea form-textarea"
                                   placeholder="What did you learn today? Describe your coding insights, MCP tools discovered, workflow improvements..."
                                   required
                                   minlength="3"
@@ -261,7 +250,7 @@
                         </label>
                         <input type="text" 
                                id="note-tags" 
-                               class="form-input"
+                               class="input form-input"
                                placeholder="mcp-tool, best-practice, debugging..."
                                aria-describedby="tags-help">
                         <div id="tags-help" class="form-help">
@@ -279,7 +268,7 @@
                         <label class="checkbox-label" for="note-is-todo">
                             <input type="checkbox" 
                                    id="note-is-todo" 
-                                   class="form-checkbox"
+                                   class="checkbox form-checkbox"
                                    aria-describedby="todo-help">
                             <span class="checkbox-text">Mark as todo item</span>
                         </label>
@@ -301,7 +290,7 @@
                             Cancel
                         </button>
                         <button type="submit" 
-                                class="btn btn-primary" 
+                                class="btn btn-default" 
                                 id="save-btn">
                             <span class="btn-text">Save Note</span>
                             <span class="btn-loading" style="display: none;">Saving...</span>
@@ -331,7 +320,7 @@
                         Cancel
                     </button>
                     <button type="button" 
-                            class="btn btn-danger" 
+                            class="btn btn-destructive" 
                             id="confirm-action">
                         Delete Note
                     </button>
@@ -371,6 +360,7 @@
 
     <!-- JavaScript -->
     <script src="scripts/main.js"></script>
+    <script src="scripts/card-rendering-patch.js"></script>
     
     <!-- Service Worker Registration (for future PWA features) -->
     <script>
