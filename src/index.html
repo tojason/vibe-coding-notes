@@ -17,6 +17,7 @@
     <!-- Styles -->
     <link rel="stylesheet" href="styles/modern-redesign.css">
     <link rel="stylesheet" href="styles/theme-contrast-fix.css">
+    <link rel="stylesheet" href="styles/summary-section.css">
     <link rel="stylesheet" href="styles/main.css">
     
     <!-- Progressive Web App meta -->
@@ -119,6 +120,62 @@
                  aria-live="polite" 
                  aria-atomic="true">
                 <!-- Search results count will be inserted here -->
+            </div>
+        </section>
+
+        <!-- Summary Section - Key Insights -->
+        <section class="summary-section" id="summary-section" aria-label="Notes summary and insights">
+            <div class="summary-container">
+                <div class="summary-header">
+                    <h2 class="summary-title">
+                        <span class="summary-icon">✨</span>
+                        Key Insights
+                    </h2>
+                    <button class="btn btn-ghost btn-sm summary-toggle" 
+                            id="summary-toggle" 
+                            aria-expanded="true"
+                            aria-controls="summary-content">
+                        <span class="toggle-icon">▼</span>
+                    </button>
+                </div>
+                
+                <div class="summary-content" id="summary-content">
+                    <!-- Stats Cards -->
+                    <div class="summary-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-notes">0</div>
+                            <div class="stat-label">Total Notes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="active-todos">0</div>
+                            <div class="stat-label">Active Todos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="completed-todos">0</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="top-tags">0</div>
+                            <div class="stat-label">Unique Tags</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Points -->
+                    <div class="key-points-section">
+                        <h3 class="key-points-title">Recent Key Points</h3>
+                        <div class="key-points-grid" id="key-points-grid">
+                            <!-- Key points will be dynamically inserted here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Tag Cloud -->
+                    <div class="tag-cloud-section">
+                        <h3 class="tag-cloud-title">Popular Topics</h3>
+                        <div class="tag-cloud" id="tag-cloud">
+                            <!-- Tag cloud will be dynamically inserted here -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -361,6 +418,7 @@
     <!-- JavaScript -->
     <script src="scripts/main.js"></script>
     <script src="scripts/card-rendering-patch.js"></script>
+    <script src="scripts/summary-section.js"></script>
     
     <!-- Service Worker Registration (for future PWA features) -->
     <script>

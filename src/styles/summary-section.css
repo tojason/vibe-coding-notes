@@ -1,0 +1,349 @@
+/**
+ * Summary Section Styles
+ * Key insights and statistics display
+ */
+
+/* ==========================================================================
+   Summary Section Layout
+   ========================================================================== */
+
+.summary-section {
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-default);
+  padding: 1.5rem 0;
+  transition: all 0.3s ease;
+}
+
+.summary-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ==========================================================================
+   Summary Header
+   ========================================================================== */
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.summary-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+}
+
+.summary-icon {
+  font-size: 1.125rem;
+}
+
+.summary-toggle {
+  padding: 0.25rem 0.5rem;
+  min-width: auto;
+}
+
+.toggle-icon {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 0.75rem;
+}
+
+.summary-toggle[aria-expanded="false"] .toggle-icon {
+  transform: rotate(-90deg);
+}
+
+/* ==========================================================================
+   Summary Content
+   ========================================================================== */
+
+.summary-content {
+  display: grid;
+  gap: 1.5rem;
+  transition: all 0.3s ease;
+  transform-origin: top;
+}
+
+.summary-content.collapsed {
+  display: none;
+}
+
+/* ==========================================================================
+   Statistics Cards
+   ========================================================================== */
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-primary);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Key Points Section
+   ========================================================================== */
+
+.key-points-section {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.key-points-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
+
+.key-points-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.key-point-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background-color: var(--bg-secondary);
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.key-point-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.key-point-bullet {
+  color: var(--accent-primary);
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.key-point-content {
+  flex: 1;
+}
+
+.key-point-text {
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem 0;
+  line-height: 1.5;
+}
+
+.key-point-source {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.key-point-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Empty state for key points */
+.key-points-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   Tag Cloud Section
+   ========================================================================== */
+
+.tag-cloud-section {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.tag-cloud-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
+
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tag-cloud-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.tag-cloud-item:hover {
+  background-color: var(--accent-light);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+/* Tag size variations based on frequency */
+.tag-cloud-item.size-1 {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.tag-cloud-item.size-2 {
+  font-size: 0.875rem;
+}
+
+.tag-cloud-item.size-3 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.tag-cloud-item.size-4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+}
+
+.tag-count {
+  margin-left: 0.375rem;
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+
+/* Empty state for tag cloud */
+.tag-cloud-empty {
+  text-align: center;
+  padding: 1rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   Dark Theme Overrides
+   ========================================================================== */
+
+[data-theme="dark"] .summary-section {
+  background-color: #0f0f0f;
+}
+
+[data-theme="dark"] .stat-card {
+  background-color: #1a1a1a;
+  border-color: #2a2a2a;
+}
+
+[data-theme="dark"] .key-points-section,
+[data-theme="dark"] .tag-cloud-section {
+  background-color: #1a1a1a;
+  border-color: #2a2a2a;
+}
+
+[data-theme="dark"] .key-point-item {
+  background-color: #0f0f0f;
+}
+
+[data-theme="dark"] .key-point-item:hover {
+  background-color: #1f1f1f;
+}
+
+[data-theme="dark"] .tag-cloud-item {
+  background-color: #0f0f0f;
+  border-color: #2a2a2a;
+}
+
+[data-theme="dark"] .tag-cloud-item:hover {
+  background-color: #1e3a8a;
+  border-color: #3b82f6;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .summary-container {
+    padding: 0 1rem;
+  }
+  
+  .summary-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  .key-points-section,
+  .tag-cloud-section {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-title {
+    font-size: 1.125rem;
+  }
+  
+  .stat-card {
+    padding: 0.75rem;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+  }
+}
